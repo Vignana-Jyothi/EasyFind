@@ -1,0 +1,107 @@
+# Ignore superapp.db
+superapp.db
+############################################
+# ENV & SECRETS (NEVER COMMIT)
+############################################
+
+.env
+*.env
+
+
+**/.env
+
+
+############################################
+# NODE.JS
+############################################
+
+node_modules/
+**/node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+############################################
+# BUILD OUTPUT
+############################################
+
+dist/
+dist-ssr/
+build/
+out/
+.next/
+coverage/
+
+**/dist/
+**/dist-ssr/
+**/build/
+**/.next/
+**/coverage/
+
+############################################
+# PYTHON CACHE ONLY (NOT DB)
+############################################
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+**/__pycache__/
+**/*.pyc
+
+############################################
+# OS FILES
+############################################
+
+.DS_Store
+Thumbs.db
+
+############################################
+# EDITOR FILES
+############################################
+
+.vscode/*
+!.vscode/extensions.json
+
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+############################################
+# TEMP FILES
+############################################
+
+*.tmp
+*.temp
+*.cache
+
+############################################
+# FRONTEND CACHE
+############################################
+
+.vite/
+*.local
+
+############################################
+# OPTIONAL: UPLOADS (remove if needed)
+############################################
+
+**/uploads/
+
+############################################
+# KEEP DATABASE FILES (NOT IGNORED)
+############################################
+
+# .db and .sqlite files are intentionally allowed
+backend/be0-campus/*.db
+# because you said you want to commit them

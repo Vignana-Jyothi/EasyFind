@@ -1,0 +1,66 @@
+campus@thor:~/vj-servers/frontend/fe-superapp$ npm run dev
+  ➜  Local:   http://localhost:3103/
+
+campus@thor:~/vj-servers/backend/be1-complaints$ node server.js
+Web server running on port 6101
+
+campus@thor:~/vj-servers/frontend/fe1-complaints$ npm start
+Local:            http://localhost:3101
+
+
+^C(vjbus_env) campus@thor:~/vj-servers/backend/be4-vjbus$ python3 server.py 
+(433736) wsgi starting up on http://0.0.0.0:6104
+
+
+^C(vjbus_env) campus@thor:~/vj-servers/frontend/fe4-vjbus$ python3 app.py 
+
+ * Running on http://10.45.8.186:3104
+
+(dpd-env) campus@thor:~/vj-servers/frontend/fe2-projects$ npm run start
+  Local:            http://localhost:3102
+  
+  
+  campus@thor:~/vj-servers/frontend/fe9-easyfind-admin$ npm run dev
+
+campus@thor:~/vj-servers/backend/be9-easyfind$ npm run dev
+Connecting to MongoDB with URI: mongodb://10.45.8.187:27017
+Server running on port 6109
+
+
+campus@thor:~/vj-servers/frontend/fe6-activity$ npm run dev
+  ➜  Local:   http://localhost:3106/
+
+^C(alogger) campus@thor:~/vj-servers/backend/be6-activity$ python app.py
+ * Running on http://10.45.8.186:6106
+
+
+^C(wall_env) campus@thor:~/vj-servers/frontend/fe5-wall$ python3 app.py 
+
+ * Running on http://10.45.8.186:3105
+
+campus@thor:~/vj-servers/frontend/fe8-undoubt$ npm start
+  ➜  Local:   http://localhost:3108/
+
+campus@thor:~/vj-servers/frontend/fe9-easyfind-child$ npm run dev
+  ➜  Local:   http://localhost:3109/
+
+campus@thor:~/vj-servers/backend/be8-undoubt$ npm start
+Server running on port 6108
+
+^C(navi_env) campus@thor:~/vj-servers/frontend/fe7-navi$ python3 app.py 
+Server is running on http://localhost:3120
+
+^C(navi_env) campus@thor:~/vj-servers/frontend/fe7-navi$ python3 app.py 
+ * Running on http://127.0.0.1:3107
+
+
+
+  
+  
+
+
+
+
+
+
+

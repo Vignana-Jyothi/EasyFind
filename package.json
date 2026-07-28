@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "lucide-react": "^0.563.0",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.11",
+    "path": "^0.12.7"
+  }
+}
