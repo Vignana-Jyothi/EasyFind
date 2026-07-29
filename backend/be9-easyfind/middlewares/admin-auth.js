@@ -23,7 +23,10 @@ module.exports = function (req, res, next) {
       return res.status(403).json({ msg: 'Forbidden: Email not authorized' });
     }
 
-    req.admin = decoded.admin;
+    req.admin = {
+      ...(decoded.admin || {}),
+      email: decoded.email
+    };
     next();
   } catch (err) {
     console.error("❌ Token verification failed:", err.message);

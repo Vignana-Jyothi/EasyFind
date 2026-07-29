@@ -8,6 +8,8 @@ import UserProfile from "../components/UserProfile";
 import ReportItem from "../components/ReportItem";
 import SearchItem from "../components/SearchItem";
 import NotifyLostItem from "../components/NotifyLostItem";
+import MyReports from "../components/MyReports";
+import NotificationsPage from "../components/NotificationsPage";
 
 import ProtectedRoute from "../contexts/ProtectedRoute";
 
@@ -34,6 +36,8 @@ const App = () => {
             <Route path="report-item" element={<ReportItem />} />
             <Route path="search-item" element={<SearchItem />} />
             <Route path="lost-item" element={<NotifyLostItem />} />
+            <Route path="my-reports" element={<MyReports />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
 
           {/* Catch-all route */}

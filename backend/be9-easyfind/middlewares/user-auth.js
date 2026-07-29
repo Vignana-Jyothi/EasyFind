@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 function extractTokenFromCookies(req) {
   const token = req.cookies?.userToken;
@@ -24,6 +25,22 @@ const auth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.AUTH_JWT_SECRET);
     req.user = decoded; // Attach user payload to the request
+
+    // Sync student user details to Userstemp database if not exists
+    if (decoded.email) {
+      User.findOne({ email: decoded.email }).then(existingUser => {
+        if (!existingUser) {
+          const newUser = new User({
+            name: decoded.name || "Student",
+            email: decoded.email,
+            googleId: decoded.googleId || "",
+            avatar: decoded.picture || ""
+          });
+          newUser.save().catch(err => console.error("Error saving student to Userstemp database:", err));
+        }
+      }).catch(err => console.error("Error checking student in Userstemp database:", err));
+    }
+
     next();
   } catch (err) {
     console.error("❌ Invalid token:", err.message);

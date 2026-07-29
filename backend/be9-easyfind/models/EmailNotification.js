@@ -11,6 +11,16 @@ const emailNotificationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Item',
   },
+  matches: [
+    {
+      lostItem: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'LostItem',
+      },
+      email: String,
+      confidenceScore: Number,
+    }
+  ],
   // For customEmail type - store recipient details
   recipientEmail: {
     type: String,

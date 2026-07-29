@@ -1,5 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { 
+  FileText, 
+  Tag, 
+  MapPin, 
+  Calendar, 
+  Upload, 
+  Camera, 
+  CheckCircle, 
+  AlertCircle,
+  HelpCircle,
+  Video,
+  X
+} from "lucide-react";
 
 const categories = [
   "ID Card/Student Card",
@@ -178,178 +191,223 @@ function UploadItem() {
   };
 
   return (
-    <div className="max-w-lg mx-auto bg-white p-6 rounded-xl shadow-lg">
-      <h3 className="text-2xl font-semibold text-gray-700 mb-4 text-center">Upload Found Item</h3>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Upload Found Item</h2>
+        <p className="text-xs text-slate-400 mt-1 font-medium">Log newly recovered items into the database to initiate AI similarity matches.</p>
+      </div>
 
-      {isSuccess && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-4">
-          ✅ Item uploaded successfully!
-        </div>
-      )}
-      {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-4">
-          ❌ Error: {errorMessage}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        {/* Main Upload Form (Left Columns) */}
+        <div className="md:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-6">
+          {isSuccess && (
+            <div className="p-4 rounded-2xl bg-emerald-50 border-l-4 border-emerald-400 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+              <CheckCircle className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
+              Item uploaded successfully!
+            </div>
+          )}
+          {errorMessage && (
+            <div className="p-4 rounded-2xl bg-rose-50 border-l-4 border-rose-400 text-rose-800 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4.5 h-4.5 text-rose-500 shrink-0" />
+              Error: {errorMessage}
+            </div>
+          )}
 
-<form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <input
-            type="text"
-            placeholder="Item Name"
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            required
-          />
-        </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Item Name */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-slate-400" />
+                  Item Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Black Dell Charger"
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  required
+                />
+              </div>
 
-        <div>
-          <select
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-          >
-            <option value="">Select Category</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
+              {/* Found Location */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  Found Location *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Block 1 Seminar Hall"
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  value={foundLocation}
+                  onChange={(e) => setFoundLocation(e.target.value)}
+                  required
+                />
+              </div>
 
-        <div>
-          <input
-            type="text"
-            placeholder="Found Location"
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            value={foundLocation}
-            onChange={(e) => setFoundLocation(e.target.value)}
-            required
-          />
-        </div>
+              {/* Category */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-455 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-slate-400" />
+                  Category *
+                </label>
+                <select
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
 
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
-            Date Found
-          </label>
-          <input
-            type="date"
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            value={reportedDate}
-            onChange={(e) => setReportedDate(e.target.value)}
-            required
-          />
-        </div>
+              {/* Date Found */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  Date Found *
+                </label>
+                <input
+                  type="date"
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  value={reportedDate}
+                  onChange={(e) => setReportedDate(e.target.value)}
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
 
-        <div>
-          <textarea
-            placeholder="Description"
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                key={fileInputKey}
+            {/* Description */}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wider mb-2">Description</label>
+              <textarea
+                placeholder="Mention identification traits (colors, scratches, stickers, brand name)..."
+                className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200 h-28 resize-none"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Choose File
-            </label>
+            </div>
+
+            {/* Photo Section */}
+            <div className="space-y-3">
+              <label className="block text-[10px] font-bold text-slate-450 uppercase tracking-wider">Item Image *</label>
+              <div className="flex flex-wrap gap-2.5">
+                <label className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl cursor-pointer text-xs font-bold transition-all duration-200 shadow-2xs">
+                  <Upload className="w-4 h-4 text-slate-500" />
+                  Choose File
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    key={fileInputKey}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage("");
+                    setIsCameraActive(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-xs font-bold transition-all duration-200"
+                >
+                  <Camera className="w-4 h-4 text-indigo-500" />
+                  Use Camera
+                </button>
+              </div>
+
+              {imagePreview && (
+                <div className="relative inline-block mt-2 border border-slate-150 rounded-2xl overflow-hidden shadow-2xs">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-28 w-28 object-cover cursor-pointer"
+                    onClick={() => setEnlargedImage(imagePreview)}
+                  />
+                  <span className="absolute bottom-1 left-1 bg-black/60 px-2 py-0.5 text-[8px] font-bold text-white rounded">Preview</span>
+                </div>
+              )}
+            </div>
+
+            {/* Submit */}
             <button
-              type="button"
-              onClick={() => {
-                setErrorMessage("");
-                setIsCameraActive(true);
-              }}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center"
+              type="submit"
+              className="w-full py-3.5 px-6 text-white font-bold rounded-xl text-xs bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-100 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Use Camera
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Uploading Item...
+                </span>
+              ) : (
+                "Upload Item"
+              )}
             </button>
-          </div>
-
-          {imagePreview && (
-            <div className="relative">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="h-32 w-32 object-contain border rounded-md cursor-pointer hover:opacity-80"
-                onClick={() => setEnlargedImage(imagePreview)}
-              />
-            </div>
-          )}
+          </form>
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition relative"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Uploading...
-            </div>
-          ) : (
-            "Upload Item"
-          )}
-        </button>
-      </form>
+        {/* Info card (Right Column) */}
+        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm border border-slate-900/50 relative overflow-hidden group">
+          <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-white/5 rounded-full blur-xl group-hover:scale-150 transition-all duration-550"></div>
+          
+          <div className="space-y-4">
+            <HelpCircle className="w-8 h-8 text-indigo-400" />
+            <h3 className="font-extrabold text-sm tracking-tight font-sans">Item Recovery guidelines</h3>
+            <ol className="list-decimal ml-4 text-[11px] text-indigo-200 space-y-2.5 font-semibold leading-relaxed">
+              <li>Upload a clear photo of the found item.</li>
+              <li>Provide descriptive metadata including unique markings.</li>
+              <li>Mark the accurate location where item was recovered.</li>
+              <li>The system generates a unique 4-letter alphanumeric item code for barcode claim matching.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
 
-      {/* Camera Modal */}
+      {/* Camera Capture Modal */}
       {isCameraActive && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full aspect-video rounded-lg"
-            />
-            <canvas ref={canvasRef} className="hidden" />
-            
-            <div className="flex justify-center gap-4 mt-4">
-              <button
-                onClick={captureImage}
-                className="p-3 bg-white rounded-full shadow-lg hover:bg-gray-100"
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-950 rounded-3xl overflow-hidden max-w-lg w-full border border-slate-800 shadow-2xl p-5 flex flex-col items-center gap-4">
+            <div className="flex justify-between items-center w-full pb-2 border-b border-slate-800">
+              <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Video className="w-4 h-4 text-indigo-400" />
+                Recovered Item Camera Capture
+              </span>
+              <button 
+                onClick={() => setIsCameraActive(false)} 
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
               >
-                📸 Capture
+                <X className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => setIsCameraActive(false)}
-                className="p-3 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600"
+            </div>
+            
+            <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black relative border border-slate-850">
+              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+
+            <div className="flex gap-3 justify-end w-full pt-2">
+              <button 
+                onClick={captureImage} 
+                className="bg-white hover:bg-slate-50 text-slate-900 px-5 py-2 rounded-xl text-xs font-extrabold shadow-sm transition duration-200"
               >
-                ✕ Close
+                Capture Photo
+              </button>
+              <button 
+                onClick={() => setIsCameraActive(false)} 
+                className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-xl text-xs font-extrabold transition duration-200"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -359,14 +417,20 @@ function UploadItem() {
       {/* Enlarged Image Modal */}
       {enlargedImage && (
         <div 
-          className="fixed inset-0 bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50"
           onClick={() => setEnlargedImage(null)}
         >
-          <div className="relative max-w-4xl w-full">
+          <div className="relative max-w-3xl w-full max-h-[85vh] flex justify-center items-center">
+            <button 
+              onClick={() => setEnlargedImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-slate-200"
+            >
+              <X className="w-7 h-7" />
+            </button>
             <img
               src={enlargedImage}
               alt="Enlarged Preview"
-              className="w-full h-full object-contain"
+              className="max-w-full max-h-full object-contain rounded-2xl border border-slate-800 shadow-2xl"
             />
           </div>
         </div>

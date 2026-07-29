@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import ReportedItems from './ReportedItems'; // Import the component
+import { User, Mail, Award, ShieldCheck } from 'lucide-react';
 
 const StudentProfile = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [showReported, setShowReported] = useState(false);
 
   if (!user) {
-    return <div className="text-center text-red-500">Please log in to view your profile</div>;
+    return (
+      <div className="text-center py-12">
+        <ShieldCheck className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+        <h4 className="text-slate-800 font-bold text-sm">Authentication Required</h4>
+        <p className="text-xs text-slate-400 mt-1">Please log in to view your student profile.</p>
+      </div>
+    );
   }
 
   const extractRollNumber = (email) => {
@@ -21,36 +24,49 @@ const StudentProfile = () => {
   const rollNumber = extractRollNumber(user?.email);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 to-gray-100 p-4">
-      <div className="mx-auto mt-8 w-full max-w-xl">
-        <div className="bg-white shadow-xl rounded-2xl p-6">
-          <h2 className="text-2xl font-semibold text-blue-700 mb-6 text-center">
-            Student Profile
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <label className="w-32 font-medium text-gray-700">Name:</label>
-              <span className="text-gray-600">{user?.name || 'N/A'}</span>
-            </div>
-            <div className="flex items-center">
-              <label className="w-32 font-medium text-gray-700">Roll Number:</label>
-              <span className="text-gray-600">{rollNumber}</span>
-            </div>
-            <div className="flex items-center">
-              <label className="w-64 font-medium text-gray-700">
-                Need to check Reported Items? Click here:
-              </label>
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
-                onClick={() => setShowReported(true)}
-              >
-                Show Reported Items
-              </button>
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Student Profile</h2>
+        <p className="text-xs text-slate-400 mt-1 font-medium">Manage and view your college credentials verified by the Single Sign-On system.</p>
+      </div>
+
+      {/* Profile Details Card */}
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col items-center text-center">
+          {/* Avatar */}
+          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 via-indigo-600 to-blue-500 text-white flex items-center justify-center font-black text-3xl shadow-md mb-4 shadow-indigo-100">
+            {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
+          </div>
+          
+          <h3 className="font-extrabold text-slate-800 text-lg">{user.name || 'Student'}</h3>
+          <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-1">Registered Student</span>
+        </div>
+
+        <div className="border-t border-slate-100 pt-6 space-y-5 text-sm font-semibold text-slate-650 max-w-md mx-auto">
+          <div className="flex items-center gap-4">
+            <User className="w-5 h-5 text-slate-400 shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 block leading-none font-bold uppercase tracking-wider">Full Name</span>
+              <span className="text-slate-800 mt-1.5 block">{user.name || 'N/A'}</span>
             </div>
           </div>
 
-          {/* Conditionally render ReportedItems component */}
-          {showReported && <ReportedItems userEmail={user?.email} />}
+          <div className="flex items-center gap-4">
+            <Award className="w-5 h-5 text-slate-400 shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 block leading-none font-bold uppercase tracking-wider">Roll Number</span>
+              <span className="text-slate-800 mt-1.5 block font-mono">{rollNumber}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Mail className="w-5 h-5 text-slate-400 shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 block leading-none font-bold uppercase tracking-wider">Email Address</span>
+              <span className="text-slate-800 mt-1.5 block truncate">{user.email || 'N/A'}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

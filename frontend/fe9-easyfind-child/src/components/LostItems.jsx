@@ -1,124 +1,10 @@
-// import { useState, useEffect } from "react";
-// import axios from "axios";
-// import { useAuth } from "../contexts/AuthContext";
-
-// function LostItems() {
-//   const { user,token } = useAuth();
-//   const [items, setItems] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [confirmDelete, setConfirmDelete] = useState(null);
-
-//   useEffect(() => {
-//     if (!user?.email) return;
-
-//     const getItems = async () => {
-//       setLoading(true);
-//       try {
-//     const res = await axios.get(
-//           `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`,
-//           {
-//       withCredentials: true,
-//           }
-//         );
-//         setItems(res.data);
-//       } catch (err) {
-//         console.log(err)
-//         setError("Failed to fetch lost items.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     getItems();
-//   }, [user?.email]);
-
-//   const handleDelete = async (id) => {
-//     const remaining = items.filter((i) => i._id !== id);
-//     setItems(remaining);
-//     setConfirmDelete(null);
-
-//     try {
-//     await axios.delete(
-//         `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost/${id}`,
-//         {
-//       withCredentials: true,
-//         }
-//       );
-//     } catch (err) {
-//       setError("Failed to delete item.");
-//       setItems((prev) => [...prev, items.find((i) => i._id === id)]); // optional rollback
-//     }
-//   };
-
-//   return (
-//     <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-blue-100 to-gray-100 shadow-lg rounded-2xl">
-//       <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">Lost Items</h2>
-
-//       {/* {loading && <p className="text-gray-500 text-center animate-pulse">Loading lost items...</p>} */}
-//       {error && <p className="text-red-500 text-center font-semibold">{error}</p>}
-//       { !error && items.length === 0 && (
-//         <p className="text-gray-500 text-center">No lost items reported yet.</p>
-//       )}
-
-//       <ul className="space-y-6">
-//         {items.map((item) => (
-//           <li
-//             key={item._id}
-//             className="border border-gray-300 bg-white p-5 rounded-lg shadow-md transition-transform transform hover:scale-105"
-//           >
-//             <div className="flex justify-between items-center">
-//               <div>
-//                 <p className="text-lg font-semibold text-gray-900">{item.itemName}</p>
-//                 <p className="text-sm text-gray-600">
-//                   Category: <span className="font-medium">{item.category}</span>
-//                 </p>
-//                 <p className="text-sm text-gray-600">
-//                   Location: <span className="font-medium">{item.location}</span>
-//                 </p>
-//               </div>
-//               <button
-//                 onClick={() => setConfirmDelete(item._id)}
-//                 className="bg-red-500 text-white px-4 py-2 text-xs font-semibold rounded-lg shadow-md hover:bg-red-700 transition"
-//               >
-//                 Delete
-//               </button>
-//             </div>
-
-//             {confirmDelete === item._id && (
-//               <div className="mt-4 flex flex-col space-y-3 bg-gray-100 p-4 rounded-lg shadow-inner">
-//                 <p className="text-gray-700 text-sm">Are you sure you want to delete this item?</p>
-//                 <div className="flex space-x-3">
-//                   <button
-//                     onClick={() => handleDelete(item._id)}
-//                     className="bg-red-600 text-white px-4 py-2 text-xs font-semibold rounded-lg shadow-md hover:bg-red-800 transition"
-//                   >
-//                     Confirm
-//                   </button>
-//                   <button
-//                     onClick={() => setConfirmDelete(null)}
-//                     className="bg-gray-400 text-white px-4 py-2 text-xs font-semibold rounded-lg shadow-md hover:bg-gray-500 transition"
-//                   >
-//                     Cancel
-//                   </button>
-//                 </div>
-//               </div>
-//             )}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// }
-
-// export default LostItems;
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { Trash2, AlertCircle, FileSpreadsheet, MapPin, Calendar, Tag } from "lucide-react";
 
 function LostItems() {
-  const { user,token } = useAuth();
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -130,19 +16,14 @@ function LostItems() {
     const getItems = async () => {
       setLoading(true);
       try {
-    const res = await axios.get(
-  `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`,
-  {
-    withCredentials: true,
-  }
-);
-
-console.log("Lost Items API Response:", res.data);
-
-setItems(Array.isArray(res.data) ? res.data : []);
+        const res = await axios.get(
+          `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`,
+          { withCredentials: true }
+        );
+        setItems(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.log(err)
-        setError("Failed to fetch lost items.");
+        console.error("Failed to fetch lost items:", err);
+        setError("Failed to load active lost reports.");
       } finally {
         setLoading(false);
       }
@@ -157,74 +38,113 @@ setItems(Array.isArray(res.data) ? res.data : []);
     setConfirmDelete(null);
 
     try {
-    await axios.delete(
+      await axios.delete(
         `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost/${id}`,
-        {
-      withCredentials: true,
-        }
+        { withCredentials: true }
       );
     } catch (err) {
-      setError("Failed to delete item.");
-      setItems((prev) => [...prev, items.find((i) => i._id === id)]); // optional rollback
+      console.error("Delete lost report error:", err);
+      setError("Failed to delete report.");
+      // Rollback list if delete failed
+      const res = await axios.get(
+        `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`,
+        { withCredentials: true }
+      );
+      setItems(Array.isArray(res.data) ? res.data : []);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-blue-100 to-gray-100 shadow-lg rounded-2xl">
-      <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">Lost Items</h2>
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-6">
+      <div>
+        <h3 className="font-extrabold text-slate-800 text-base">Active Lost Reports</h3>
+        <p className="text-[11px] text-slate-400 font-medium">Below are the items you have reported as lost on campus.</p>
+      </div>
 
-      {/* {loading && <p className="text-gray-500 text-center animate-pulse">Loading lost items...</p>} */}
-      {error && <p className="text-red-500 text-center font-semibold">{error}</p>}
-      { !error && items.length === 0 && (
-        <p className="text-gray-500 text-center">No lost items reported yet.</p>
+      {error && (
+        <div className="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-2xl text-xs font-semibold text-rose-800 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+          {error}
+        </div>
       )}
 
-      <ul className="space-y-6">
-        {items.map((item) => (
-          <li
-            key={item._id}
-            className="border border-gray-300 bg-white p-5 rounded-lg shadow-md transition-transform transform hover:scale-105"
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-lg font-semibold text-gray-900">{item.itemName}</p>
-                <p className="text-sm text-gray-600">
-                  Category: <span className="font-medium">{item.category}</span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Location: <span className="font-medium">{item.location}</span>
-                </p>
-              </div>
-              <button
-                onClick={() => setConfirmDelete(item._id)}
-                className="bg-red-500 text-white px-4 py-2 text-xs font-semibold rounded-lg shadow-md hover:bg-red-700 transition"
-              >
-                Delete
-              </button>
-            </div>
+      {loading ? (
+        <div className="py-12 flex flex-col items-center justify-center space-y-2">
+          <svg className="animate-spin h-7 w-7 text-indigo-600" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-[11px] text-slate-400 font-medium">Loading reports...</span>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          <span className="text-xs text-slate-400 font-semibold block">No active lost reports found.</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {items.map((item) => (
+            <div 
+              key={item._id} 
+              className="border border-slate-100 bg-slate-50/50 hover:bg-slate-50 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between gap-4 group hover:scale-[1.01]"
+            >
+              <div className="space-y-3">
+                <div className="flex justify-between items-start gap-2">
+                  <span className="font-extrabold text-slate-800 text-xs tracking-tight line-clamp-1">{item.itemName}</span>
+                  <span className="shrink-0 px-2 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-md font-bold text-[9px] uppercase tracking-wide">
+                    {item.category || "General"}
+                  </span>
+                </div>
 
-            {confirmDelete === item._id && (
-              <div className="mt-4 flex flex-col space-y-3 bg-gray-100 p-4 rounded-lg shadow-inner">
-                <p className="text-gray-700 text-sm">Are you sure you want to delete this item?</p>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    className="bg-red-600 text-white px-4 py-2 text-xs font-semibold rounded-lg shadow-md hover:bg-red-800 transition"
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(null)}
-                    className="bg-gray-400 text-white px-4 py-2 text-xs font-semibold rounded-lg shadow-md hover:bg-gray-500 transition"
-                  >
-                    Cancel
-                  </button>
+                <div className="space-y-1.5 text-[11px] text-slate-500 font-semibold">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">Last Seen: {item.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>Lost On: {new Date(item.dateLost).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                  {item.description && (
+                    <p className="text-[10px] text-slate-400 italic line-clamp-2 mt-2 pt-1 border-t border-slate-200/40">
+                      "{item.description}"
+                    </p>
+                  )}
                 </div>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
+
+              <div className="pt-2 border-t border-slate-100/60 flex justify-between items-center">
+                {confirmDelete === item._id ? (
+                  <div className="flex items-center justify-between w-full bg-rose-50 border border-rose-100 p-2.5 rounded-xl animate-fade-in gap-3 text-[10px] font-bold">
+                    <span className="text-rose-800">Confirm delete?</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg transition-colors text-[10px] font-bold"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(null)}
+                        className="bg-slate-200 hover:bg-slate-350 text-slate-700 px-3 py-1 rounded-lg transition-colors text-[10px] font-bold"
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(item._id)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 font-bold rounded-xl transition-all text-[10px]"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Cancel Lost Report
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ const passport = require("passport");
 const authRoutes = require("./routes/auth.route");
 const adminRoutes = require("./routes/admin.route");
 const userRoutes = require("./routes/user.route")  
+const notificationRoutes = require("./routes/notification.route");
 const cookieParser = require("cookie-parser");
 
 // const userDetails = require("./apis/users/userDetails");
@@ -66,6 +67,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/api/items/admin", adminRoutes);
 app.use("/api/items", userRoutes);
+app.use("/api/notifications", notificationRoutes);
 // app.use("/api", userDetails);
 
 // app.use("/api/security", securityRoutes);

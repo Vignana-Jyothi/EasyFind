@@ -1,5 +1,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { 
+  Check, 
+  Trash2, 
+  Search, 
+  Filter, 
+  AlertTriangle, 
+  CheckCircle,
+  Eye, 
+  EyeOff, 
+  Info,
+  Calendar,
+  MapPin,
+  Tag,
+  User,
+  X
+} from "lucide-react";
 
 function ManageItems() {
   const [items, setItems] = useState([]);
@@ -30,10 +46,6 @@ function ManageItems() {
           new Date(b.reportedDate) - new Date(a.reportedDate)
         );
         setItems(sortedItems);
-
-        if (!Array.isArray(response.data)) {
-          console.warn('Unexpected items response:', response.data);
-        }
       } catch (error) {
         console.error("Error fetching items:", error);
         setBackendError("Failed to load items. Please try again later.");
@@ -61,7 +73,7 @@ function ManageItems() {
       
       setItems(items.map(item => (item._id === id ? { ...item, status: newStatus } : item)));
       setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 5000);
+      setTimeout(() => setIsSuccess(false), 5500);
     } catch (error) {
       let errorMsg = "An unexpected error occurred. Please try again.";
       
@@ -136,211 +148,325 @@ function ManageItems() {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h3 className="text-2xl font-bold mb-6">Approve Items</h3>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Approve Logged Items</h2>
+        <p className="text-xs text-slate-400 mt-1 font-medium">Verify newly uploaded found items or check active verified inventory.</p>
+      </div>
 
       {isSuccess && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-4">
-          ✅ Status updated successfully!
+        <div className="p-4 rounded-2xl bg-emerald-50 border-l-4 border-emerald-400 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-emerald-500" />
+          Status updated successfully!
         </div>
       )}
       
       {backendError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-4">
-          ❌ Error: {backendError}
+        <div className="p-4 rounded-2xl bg-rose-50 border-l-4 border-rose-400 text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-500" />
+          Error: {backendError}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-4 mb-4">
-        <button 
-          className={`px-4 py-2 rounded-md ${
-            view === "pending" 
-              ? "bg-blue-500 text-white" 
-              : "bg-gray-200 hover:bg-gray-300"
-          }`} 
-          onClick={() => setView("pending")}
-        >
-          Pending Items
-        </button>
-        <button 
-          className={`px-4 py-2 rounded-md ${
-            view === "verified" 
-              ? "bg-blue-500 text-white" 
-              : "bg-gray-200 hover:bg-gray-300"
-          }`} 
-          onClick={() => setView("verified")}
-        >
-          Verified Items
-        </button>
+      {/* Filters Card */}
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 space-y-4">
+        {/* Toggle Pills */}
+        <div className="flex gap-2 border-b border-slate-50 pb-4">
+          <button 
+            className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+              view === "pending" 
+                ? "bg-indigo-600 text-white shadow-sm" 
+                : "bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-slate-200/50"
+            }`} 
+            onClick={() => setView("pending")}
+          >
+            Pending Approval
+          </button>
+          <button 
+            className={`px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+              view === "verified" 
+                ? "bg-indigo-600 text-white shadow-sm" 
+                : "bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-slate-200/50"
+            }`} 
+            onClick={() => setView("verified")}
+          >
+            Verified Items
+          </button>
+        </div>
+
+        {/* Text Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+            <input
+              type="text"
+              placeholder="Search by Code..."
+              className="w-full pl-10 pr-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+              onChange={(e) => setSearchCode(e.target.value)}
+            />
+          </div>
+          <div className="flex-1 relative">
+            <Filter className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+            <input
+              type="text"
+              placeholder="Search by Category..."
+              className="w-full pl-10 pr-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+              onChange={(e) => setSearchCategory(e.target.value)}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search by Code"
-          className="border px-3 py-2 rounded-md flex-1 min-w-[200px]"
-          onChange={(e) => setSearchCode(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Search by Category"
-          className="border px-3 py-2 rounded-md flex-1 min-w-[200px]"
-          onChange={(e) => setSearchCategory(e.target.value)}
-        />
-      </div>
-
+      {/* Main List */}
       {loading ? (
-        <div className="flex justify-center items-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="py-12 flex flex-col items-center justify-center space-y-2">
+          <svg className="animate-spin h-7 w-7 text-indigo-600" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
         </div>
       ) : (
         filteredItems.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No items available</p>
+          <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-2xs">
+            <Info className="w-8 h-8 text-slate-350 mx-auto mb-2" />
+            <span className="text-xs text-slate-400 font-semibold block">No items match current criteria.</span>
+          </div>
         ) : (
           <ul className="space-y-4">
             {filteredItems.map((item) => (
               <li 
                 key={item._id} 
-                className="p-4 border rounded-md shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white border border-slate-100 p-5 rounded-2xl shadow-xs hover:shadow-md transition-all duration-200 group hover:scale-[1.005]"
               >
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div className="flex-1">
-                    <p className="font-semibold text-lg">
-                      {item.itemName} <span className="text-sm text-gray-600">(Code: {item.code})</span>
-                    </p>
-                    <p className="text-sm text-gray-600">Category: {item.category}</p>
-                    <p className={`text-sm font-semibold ${
-                      item.status === "pending" ? "text-yellow-600" : "text-blue-600"
-                    }`}>
-                      Status: {item.status.toUpperCase()}
-                    </p>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="font-extrabold text-slate-800 text-sm">{item.itemName}</span>
+                      <span className="text-[10px] text-indigo-650 bg-indigo-50 font-bold px-2 py-0.5 rounded font-mono">
+                        Code: {item.code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wide">
+                      <span>Category: {item.category}</span>
+                      <span>•</span>
+                      <span className={item.status === "pending" ? "text-amber-500" : "text-emerald-500"}>
+                        Status: {item.status}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex items-center gap-2">
                     {item.status === "pending" && (
                       <button 
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm sm:text-base"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-100 hover:shadow-lg"
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           handleVerifyClick(item);
                         }}
                         disabled={updatingStatus}
                       >
-                        Verify
+                        Verify Item
                       </button>
                     )}
                     {item.status === "verified" && (
                       <button 
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm sm:text-base"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-xs font-bold transition-all"
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           handleStatusChange(item._id, "pending"); 
                         }}
                         disabled={updatingStatus}
                       >
-                        {updatingStatus ? "Updating..." : "Undo (Pending)"}
+                        {updatingStatus ? "Updating..." : "Undo Verify"}
                       </button>
                     )}
                     <button 
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm sm:text-base"
+                      className="p-2.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors border border-slate-100"
                       onClick={(e) => { 
                         e.stopPropagation(); 
                         handleDeleteClick(item);
                       }}
                       disabled={updatingStatus}
                     >
-                      Delete
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
+                {/* Expanded Section */}
                 {expandedItem === item._id && (
-                  <div className="mt-4 pt-4 border-t">
-                    {item.image?.url && (
-                      <img
-                        src={item.image.url}
-                        alt={item.itemName}
-                        className="max-w-[200px] h-auto rounded-md mb-3 border"
-                      />
-                    )}
-                    <p className="text-sm text-gray-600">Description: {item.description}</p>
-                    <p className="text-sm text-gray-600">Location Found: {item.foundLocation}</p>
-                    <p className="text-sm text-gray-600">
-                      Reported Date: {new Date(item.reportedDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-600">Reporter ID: {item.reporterRollNo}</p>
+                  <div className="mt-5 pt-5 border-t border-slate-100/80 grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs font-semibold text-slate-650 animate-fade-in">
+                    <div className="space-y-3.5">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-slate-400 block leading-none">Category</span>
+                          <span className="text-slate-800 mt-1 block">{item.category}</span>
+                        </div>
+                      </div>
 
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-slate-400 block leading-none">Location Found</span>
+                          <span className="text-slate-800 mt-1 block">{item.foundLocation}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-slate-400 block leading-none">Date Logged</span>
+                          <span className="text-slate-800 mt-1 block">
+                            {new Date(item.reportedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-slate-400 block leading-none">Reporter ID</span>
+                          <span className="text-slate-800 mt-1 block font-mono">{item.reporterRollNo}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {item.image?.url && (
+                        <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-2xs aspect-video max-h-36 relative">
+                          <img
+                            src={item.image.url}
+                            alt={item.itemName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-[10px] text-slate-400 block leading-none">Item Description</span>
+                        <p className="text-slate-650 italic mt-1 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                          "{item.description}"
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
-                <button
-                  className="mt-2 text-sm text-blue-500 hover:text-blue-600"
-                  onClick={() => setExpandedItem(expandedItem === item._id ? null : item._id)}
-                >
-                  {expandedItem === item._id ? "Show Less" : "Show More"}
-                </button>
+                
+                {/* View Details Toggle */}
+                <div className="mt-3 flex justify-start">
+                  <button
+                    className="text-indigo-600 hover:text-indigo-700 text-xs font-bold flex items-center gap-1"
+                    onClick={() => setExpandedItem(expandedItem === item._id ? null : item._id)}
+                  >
+                    {expandedItem === item._id ? (
+                      <>
+                        <EyeOff className="w-3.5 h-3.5" />
+                        Hide Details
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-3.5 h-3.5" />
+                        Show Details
+                      </>
+                    )}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )
       )}
 
+      {/* Verification Dialog Overlay */}
       {showImageModal && selectedItemForVerification && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <h3 className="text-xl font-bold mb-4">Verify Item: {selectedItemForVerification.itemName}</h3>
-            <img
-              src={selectedItemForVerification.image.url}
-              alt={selectedItemForVerification.itemName}
-              className="w-full h-auto rounded-md mb-4"
-            />
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
-              <button
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md order-2 sm:order-1"
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100">
+            <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white px-6 py-4 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-extrabold uppercase tracking-wider">Verify Item Upload</h4>
+                <p className="text-[10px] text-indigo-300 mt-0.5 font-mono">Code: {selectedItemForVerification.code}</p>
+              </div>
+              <button 
                 onClick={() => setShowImageModal(false)}
+                className="text-white hover:text-slate-200 p-1 rounded-lg"
               >
-                Cancel
+                <X className="w-5 h-5" />
               </button>
-              <button
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md order-1 sm:order-2"
-                onClick={() => handleStatusChange(selectedItemForVerification._id, "verified")}
-                disabled={updatingStatus}
-              >
-                {updatingStatus ? "Verifying..." : "Confirm Verification"}
-              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest">Verify Details of: {selectedItemForVerification.itemName}</h3>
+              {selectedItemForVerification.image?.url && (
+                <div className="w-full aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-2xs">
+                  <img
+                    src={selectedItemForVerification.image.url}
+                    alt={selectedItemForVerification.itemName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              
+              <div className="flex gap-2.5 justify-end pt-2">
+                <button
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-slate-200/50"
+                  onClick={() => setShowImageModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md"
+                  onClick={() => handleStatusChange(selectedItemForVerification._id, "verified")}
+                  disabled={updatingStatus}
+                >
+                  {updatingStatus ? "Verifying..." : "Confirm Verification"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Delete Confirmation Overlay */}
       {showDeleteModal && itemToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4 text-red-600">Delete Item</h3>
-            <p className="text-gray-700 mb-2">Are you sure you want to delete this item?</p>
-            <div className="bg-gray-50 p-3 rounded-md mb-4">
-              <p className="font-semibold">{itemToDelete.itemName}</p>
-              <p className="text-sm text-gray-600">Code: {itemToDelete.code}</p>
-              <p className="text-sm text-gray-600">Category: {itemToDelete.category}</p>
-            </div>
-            <p className="text-red-600 text-sm mb-4">⚠️ This action cannot be undone.</p>
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
-              <button
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md order-2 sm:order-1"
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setItemToDelete(null);
-                }}
-                disabled={updatingStatus}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md order-1 sm:order-2"
-                onClick={handleDeleteConfirm}
-                disabled={updatingStatus}
-              >
-                {updatingStatus ? "Deleting..." : "Delete"}
-              </button>
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100">
+            <div className="p-6 space-y-4">
+              <div className="w-12 h-12 bg-rose-50 border border-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-extrabold text-slate-850 text-center uppercase tracking-wide">Confirm Deletion</h3>
+              <p className="text-xs text-slate-400 text-center leading-relaxed">
+                Are you sure you want to delete this found item record? This will completely purge the record from the database.
+              </p>
+              
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs font-semibold text-slate-700 space-y-1">
+                <p className="font-extrabold text-slate-850">{itemToDelete.itemName}</p>
+                <p className="text-[10px] text-slate-450 font-mono">Code: {itemToDelete.code}</p>
+                <p className="text-[10px] text-slate-455">Category: {itemToDelete.category}</p>
+              </div>
+              
+              <p className="text-rose-600 text-[10px] font-bold text-center">⚠️ Warning: This action cannot be undone.</p>
+              
+              <div className="flex gap-2.5 justify-end pt-2">
+                <button
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 px-4 rounded-xl text-xs font-bold transition-all border border-slate-200"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                  }}
+                  disabled={updatingStatus}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 px-4 rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-100 hover:shadow-lg"
+                  onClick={handleDeleteConfirm}
+                  disabled={updatingStatus}
+                >
+                  {updatingStatus ? "Deleting..." : "Delete Item"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

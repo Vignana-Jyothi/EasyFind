@@ -2,6 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { 
+  Tag, 
+  MapPin, 
+  Calendar, 
+  FileText, 
+  Camera, 
+  Upload, 
+  X, 
+  CheckCircle, 
+  AlertCircle,
+  HelpCircle,
+  Video
+} from 'lucide-react';
 
 const categories = [
   "ID Card/Student Card",
@@ -18,7 +31,7 @@ const categories = [
 ];
 
 const ReportItem = ({ onItemReported }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     itemName: '',
@@ -57,7 +70,7 @@ const ReportItem = ({ onItemReported }) => {
       });
       if (videoRef.current) videoRef.current.srcObject = stream;
     } catch (err) {
-      setStatus("Camera access denied. Please allow camera permissions.");
+      setStatus("Camera access denied. Please check permissions.");
       setIsCameraActive(false);
     }
   };
@@ -131,7 +144,7 @@ const ReportItem = ({ onItemReported }) => {
     if (loading) return;
     
     if (!image) {
-      setStatus('Please upload an image.');
+      setStatus('Please upload or capture an image of the found item.');
       return;
     }
 
@@ -150,23 +163,21 @@ const ReportItem = ({ onItemReported }) => {
       data.append('reporterRollNo', rollNo);
       data.append('image', image);
 
-    const response = await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/found`, data, {
           withCredentials: true,
-      // Cookie-based auth; no Authorization header
         }
       );
 
-      console.log("data is here", response)  
-      const res = response.data
+      const res = response.data;
       if (res.success) {
         resetForm();
-        setSuccessMessage('Item successfully reported! Please remember to submit the physical item to the security office.');
+        setSuccessMessage('Item successfully reported! Please hand over the physical item to the security office as soon as possible.');
         setTimeout(() => {
           setSuccessMessage('');
           onItemReported?.(res.item);
-          navigate('/');
-        }, 10000);
+          navigate('/dashboard');
+        }, 8000);
       } else {
         throw new Error(res.message || 'Failed to report item');
       }
@@ -176,7 +187,6 @@ const ReportItem = ({ onItemReported }) => {
         error.response?.data?.error ||
         error.message ||
         'Failed to report item';
-      console.error('Report item failed:', error.response?.data || error);
       setStatus(backendMessage);
     } finally {
       setLoading(false);
@@ -184,155 +194,235 @@ const ReportItem = ({ onItemReported }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-6 px-4 flex justify-center">
-      <div className="w-full max-w-2xl">
-        <div className="bg-white shadow-lg rounded-2xl p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-blue-700">Report Found Item</h2>
-            <p className="text-sm text-gray-500 mt-1">Share a few details to help us match with lost-item reports.</p>
-          </div>
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Report Found Item</h2>
+        <p className="text-xs text-slate-400 mt-1 font-medium">Add details of items you've found on campus to help reunite them with owners.</p>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        {/* Main Form (Left Column) */}
+        <div className="md:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-6">
           {status && (
-            <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
+            <div className="p-4 rounded-2xl bg-rose-50 border-l-4 border-rose-400 text-rose-800 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4.5 h-4.5 text-rose-500 shrink-0" />
               {status}
             </div>
           )}
           {successMessage && (
-            <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-green-700 text-sm">
+            <div className="p-4 rounded-2xl bg-emerald-50 border-l-4 border-emerald-400 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+              <CheckCircle className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
               {successMessage}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-              <input
-                type="text"
-                name="itemName"
-                value={formData.itemName}
-                onChange={handleChange}
-                placeholder="e.g., iPhone, Keys, Wallet"
-                className="w-full rounded-lg border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500"
-                required
-              />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Item Name */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-slate-400" />
+                  Item Name *
+                </label>
+                <input
+                  type="text"
+                  name="itemName"
+                  value={formData.itemName}
+                  onChange={handleChange}
+                  placeholder="e.g., Boat Earphones, Milton Bottle"
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  required
+                />
+              </div>
+
+              {/* Found Location */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  Found Location *
+                </label>
+                <input
+                  type="text"
+                  name="foundLocation"
+                  value={formData.foundLocation}
+                  onChange={handleChange}
+                  placeholder="e.g., Canteen, Block 2 Room 102"
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  required
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-slate-400" />
+                  Category *
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date Found */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  Date Found *
+                </label>
+                <input
+                  type="date"
+                  name="reportedDate"
+                  value={formData.reportedDate}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200"
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
             </div>
 
-            <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Found Location</label>
-              <input
-                type="text"
-                name="foundLocation"
-                value={formData.foundLocation}
-                onChange={handleChange}
-                placeholder="JSK greens, E block entrance .."
-                className="w-full rounded-lg border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full rounded-lg border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date Found</label>
-              <input
-                type="date"
-                name="reportedDate"
-                value={formData.reportedDate || ''}
-                onChange={handleChange}
-                className="w-full rounded-lg border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Description *
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Color, brand, distinctive features..."
+                placeholder="Mention unique features (colors, keychains, physical damages, brand name)..."
                 rows={3}
-                className="w-full rounded-lg border px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white transition-all duration-200 h-28 resize-none"
                 required
               />
             </div>
 
-            <div className="md:col-span-2">
-              <div className="flex flex-wrap gap-2">
-                <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            {/* Media Upload Options */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Attach Item Image *
+              </label>
+              <div className="flex flex-wrap gap-2.5">
+                <label className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl cursor-pointer text-xs font-bold transition-all duration-200 shadow-2xs">
+                  <Upload className="w-4 h-4 text-slate-500" />
                   Upload Photo
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                 </label>
                 <button
                   type="button"
                   onClick={() => { setStatus(''); setIsCameraActive(true); }}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-xs font-bold transition-all duration-200"
                 >
-                  Take Photo
+                  <Camera className="w-4 h-4 text-indigo-500" />
+                  Take Live Photo
                 </button>
-                {image && (
-                  <span className="text-sm text-gray-600 self-center truncate max-w-[60%]">
-                    {image.name}
-                  </span>
-                )}
               </div>
+
               {imagePreview && (
-                <div className="mt-3">
-                  <img src={imagePreview} alt="Preview" className="h-28 w-28 object-contain border rounded-md" />
+                <div className="relative inline-block mt-2 border border-slate-150 rounded-2xl overflow-hidden shadow-2xs">
+                  <img src={imagePreview} alt="Preview" className="h-28 w-28 object-cover" />
+                  <button 
+                    type="button" 
+                    onClick={() => { setImage(null); setImagePreview(null); }}
+                    className="absolute top-1 right-1 bg-black/60 hover:bg-black text-white p-1 rounded-full"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
             </div>
 
-            <div className="md:col-span-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full md:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {loading ? 'Submitting…' : 'Report Found Item'}
-              </button>
-            </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3.5 px-6 text-white font-bold rounded-xl text-xs transition-all duration-200 shadow-md ${
+                loading 
+                  ? 'bg-indigo-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200/50 hover:shadow-lg'
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Submitting Report...
+                </span>
+              ) : (
+                'Report Found Item'
+              )}
+            </button>
           </form>
+        </div>
 
-          {/* Next Steps */}
-          <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <h3 className="font-semibold text-blue-800 mb-2">Next Steps</h3>
-            <ol className="list-decimal ml-5 text-blue-700 text-sm space-y-1">
-              <li>Submit this form with the item details</li>
-              <li>Take the item to the Security Office</li>
-              <li>We’ll notify the owner if we find a match</li>
-              <li>Hand over the item when contacted by security</li>
+        {/* Sidebar Info Card (Right Column) */}
+        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm border border-slate-900/50 relative overflow-hidden group">
+          <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-white/5 rounded-full blur-xl group-hover:scale-150 transition-all duration-550"></div>
+          
+          <div className="space-y-4">
+            <HelpCircle className="w-8 h-8 text-indigo-400" />
+            <h3 className="font-extrabold text-sm tracking-tight">Next steps</h3>
+            <ol className="list-decimal ml-4 text-[11px] text-indigo-200 space-y-2.5 font-semibold">
+              <li>Submit this found report with image details.</li>
+              <li>Deliver the physical found item to the security desk.</li>
+              <li>We automatically run weighted similarity matching.</li>
+              <li>If matches exceed the threshold, notifications trigger.</li>
             </ol>
           </div>
         </div>
+      </div>
 
-        {isCameraActive && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-            <div className="w-full max-w-2xl">
-              <video ref={videoRef} autoPlay playsInline className="w-full aspect-video rounded-lg bg-black" />
+      {/* Webcam overlay */}
+      {isCameraActive && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-950 rounded-3xl overflow-hidden max-w-lg w-full border border-slate-800 shadow-2xl p-5 flex flex-col items-center gap-4">
+            <div className="flex justify-between items-center w-full pb-2 border-b border-slate-800">
+              <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Video className="w-4 h-4 text-indigo-400" />
+                Live Camera Capture
+              </span>
+              <button 
+                onClick={() => setIsCameraActive(false)} 
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black relative border border-slate-850">
+              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
               <canvas ref={canvasRef} className="hidden" />
-              <div className="flex justify-center gap-4 mt-4">
-                <button onClick={captureImage} className="px-4 py-2 bg-white rounded-md shadow hover:bg-gray-100">Capture</button>
-                <button onClick={() => setIsCameraActive(false)} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Close</button>
-              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end w-full pt-2">
+              <button 
+                onClick={captureImage} 
+                className="bg-white hover:bg-slate-50 text-slate-900 px-5 py-2 rounded-xl text-xs font-extrabold shadow-sm transition duration-200"
+              >
+                Capture Photo
+              </button>
+              <button 
+                onClick={() => setIsCameraActive(false)} 
+                className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-xl text-xs font-extrabold transition duration-200"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

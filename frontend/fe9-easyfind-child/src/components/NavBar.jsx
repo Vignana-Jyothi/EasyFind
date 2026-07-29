@@ -1,149 +1,88 @@
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Menu, User, LogOut, Search, AlertCircle, Home, Bell, X } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
-
-const navItems = [
-  { path: '/dashboard', icon: Home, label: 'Home' },
-  { path: '/dashboard/report-item', icon: AlertCircle, label: 'Report Item' },
-  { path: '/dashboard/lost-item', icon: Bell, label: 'Lost Item?' },
-  { path: '/dashboard/search-item', icon: Search, label: 'Search Item' },
-  { path: '/dashboard/user-profile', icon: User, label: 'User Profile' },
-];
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Home, AlertCircle, Bell, User, Search, LogOut, HeartHandshake } from 'lucide-react';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const menuRef = useRef(null);
+  const location = useLocation();
 
-  // Responsive handling
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Close menu on Escape key
-  useEffect(() => {
-    if (menuOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [menuOpen]);
-
-  const handleEscape = (event) => {
-    if (event.key === 'Escape') {
-      setMenuOpen(false);
-    }
-  };
-
-  // Lock body scroll when drawer is open
-  useEffect(() => {
-    if (menuOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = prev;
-      };
-    }
-  }, [menuOpen]);
-
-  // Smooth navigation
-  const handleNavigation = (path) => {
-    setMenuOpen(false);
-    navigate(path);
-  };
+  const navItems = [
+    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: '/dashboard/lost-item', icon: AlertCircle, label: 'Report Lost' },
+    { path: '/dashboard/report-item', icon: HeartHandshake, label: 'Report Found' },
+    { path: '/dashboard/search-item', icon: Search, label: 'Search Items' },
+    { path: '/dashboard/user-profile', icon: User, label: 'Profile' },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-white shadow-md">
-      <h1 
-        className="text-xl sm:text-2xl font-bold text-blue-600 cursor-pointer"
-        onClick={() => navigate('/dashboard')}
-      ><img 
-         src="https://res.cloudinary.com/dxql68kht/image/upload/fl_preserve_transparency/v1744206896/Screenshot_2025-04-09_191750_kml7qq.jpg?_s=public-apps" 
-         alt="Logo" 
-         className="h-10 w-auto" 
- />
-   </h1>
+    <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-150 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-sm">
+      {/* Brand logo on Mobile only */}
+      <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
+        <img 
+          src="https://res.cloudinary.com/dxql68kht/image/upload/fl_preserve_transparency/v1744206896/Screenshot_2025-04-09_191750_kml7qq.jpg?_s=public-apps" 
+          alt="EasyFind Logo" 
+          className="h-8.5 w-auto object-contain rounded" 
+        />
+        <div className="lg:hidden">
+          <span className="font-bold text-slate-800 text-base tracking-tight block leading-none">EasyFind</span>
+          <span className="text-[9px] font-semibold text-indigo-600 uppercase tracking-widest block mt-0.5">Lost & Found</span>
+        </div>
+      </div>
 
+      {/* Center Nav tabs - Desktop */}
       {user && (
-        <div className="relative" ref={menuRef}>
-          {isMobile ? (
-            <button 
-              aria-label="Toggle menu"
-              aria-expanded={menuOpen}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <Menu size={24} />
-            </button>
-          ) : (
-            <nav className="hidden lg:flex items-center gap-2">
-              {navItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
-                >
-                  <item.icon size={18} />
-                  {item.label}
-                </button>
-              ))}
-              <button 
-                onClick={logout}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
+        <nav className="hidden md:flex items-center gap-1.5">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                  isActive 
+                    ? "bg-slate-100 text-indigo-600" 
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                }`}
               >
-                <LogOut size={18} />
-                Logout
+                <item.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                {item.label}
               </button>
-            </nav>
-          )}
+            );
+          })}
+        </nav>
+      )}
 
-          {/* Mobile Menu */}
-          {menuOpen && isMobile && (
-            <div 
-              className="fixed inset-0 bg-black/50 lg:hidden"
-              onClick={() => setMenuOpen(false)}
-              aria-modal="true"
-              role="dialog"
-            >
-              <div 
-                className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-xl p-4 transition-transform duration-300 translate-x-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-gray-800">Menu</span>
-                  <button aria-label="Close menu" className="p-2 rounded-md hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
-                    <X size={20} />
-                  </button>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {navItems.map((item) => (
-                    <button
-                      key={item.path}
-                      onClick={() => handleNavigation(item.path)}
-                      className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-100 rounded-lg"
-                    >
-                      <item.icon size={20} />
-                      {item.label}
-                    </button>
-                  ))}
-                  <button 
-                    onClick={logout}
-                    className="flex items-center gap-3 px-4 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg mt-2"
-                  >
-                    <LogOut size={20} />
-                    Logout
-                  </button>
-                </div>
-              </div>
+      {/* Right User Bar */}
+      {user && (
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/dashboard?focus=notifications')}
+            className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
+            aria-label="View notifications"
+          >
+            <Bell className="w-[18px] h-[18px]" />
+            <span className="absolute top-1 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+          </button>
+
+          <div className="flex items-center gap-2.5 border-l border-slate-100 pl-3">
+            {/* Student avatar placeholder */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-500 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
             </div>
-          )}
+            <div className="hidden sm:block text-left">
+              <span className="text-xs font-bold text-slate-800 block leading-none">{user.name || 'Student'}</span>
+              <span className="text-[9px] text-slate-400 block mt-0.5 font-mono">{user.email ? user.email.split('@')[0].toUpperCase() : ''}</span>
+            </div>
+          </div>
+
+          <button 
+            onClick={logout}
+            className="md:hidden p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+            aria-label="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       )}
     </header>

@@ -8,6 +8,9 @@ const  auth =require('../middlewares/admin-auth')
 const sendEmail = require("../utils/notifications");
 const stringSimilarity = require("string-similarity");
 const { dispatchEmailJob } = require('../utils/emailDispatcher');
+const User = require('../models/User');
+const { calculateMatchScore } = require('../utils/matchingAlgorithm');
+const Notification = require('../models/Notification');
 
   /////////////////////////////////////////////// ADMIN ROUTES///////////////////////////
   // admin login
@@ -201,6 +204,34 @@ router.put("/:id/handover",auth, upload.single("image"), async (req, res) => {
 
     await item.save();
     console.log("Item handed over successfully with item details", item);
+
+    // Trigger In-App Notifications
+    const studentEmail = rollNo.toLowerCase() + "@vnrvjiet.in";
+    await Notification.create({
+      email: studentEmail,
+      title: "Item Handed Over",
+      description: `Your item "${item.itemName}" (Code: ${item.code}) has been successfully claimed and handed over to you.`,
+      type: "success",
+      icon: "Gift",
+      relatedItem: item._id
+    });
+
+    // Trigger Email Notification
+    await sendEmail(
+      studentEmail,
+      "Item Handed Over - EasyFind",
+      `Your item "${item.itemName}" (Unique Code: ${item.code}) has been successfully claimed and handed over to you.`
+    ).catch(err => console.error("Failed to send handover email:", err));
+
+    await Notification.create({
+      email: "admin",
+      title: "Handover Confirmed",
+      description: `Item "${item.itemName}" (Code: ${item.code}) was handed over to student ${rollNo.toUpperCase()} manually.`,
+      type: "success",
+      icon: "Gift",
+      relatedItem: item._id
+    });
+
     res.json({ success: true, message: "Item handed over successfully", item });
   } catch (error) {
     console.error("Error updating item:", error);
@@ -232,6 +263,28 @@ router.patch("/updatestatus", auth, async (req, res) => {
     }
 
     await Item.updateOne({ _id: id }, { $set: { status } });
+
+    // Trigger In-App Notifications
+    if (status === "verified") {
+      if (item.reporterRollNo && item.reporterRollNo !== "admin") {
+        const studentEmail = item.reporterRollNo.toLowerCase() + "@vnrvjiet.in";
+        await Notification.create({
+          email: studentEmail,
+          title: "Report Verified",
+          description: `Your reported found item "${item.itemName}" has been verified by the Security Office.`,
+          type: "success",
+          icon: "ShieldCheck",
+          relatedItem: item._id
+        });
+
+        // Trigger Email Notification
+        await sendEmail(
+          studentEmail,
+          "Found Report Verified - EasyFind",
+          `Your reported found item "${item.itemName}" has been verified by the Security Office. Thank you for contributing to campus safety.`
+        ).catch(err => console.error("Failed to send verification email:", err));
+      }
+    }
 
     // If the item is verified, compare with all lost items
     if (status === "verified" && item.description) {
@@ -304,6 +357,171 @@ router.patch('/verify/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating status:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Barcode Handover Verification Endpoint
+router.post('/:id/verify-handover', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { barcodeValue, rollNo } = req.body;
+
+    const item = await Item.findById(id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Found item not found' });
+    }
+
+    if (item.status === 'claimed') {
+      return res.status(400).json({ success: false, message: 'Item has already been handed over/claimed.' });
+    }
+
+    let rollNoInput = (barcodeValue || rollNo || "").trim().toLowerCase();
+    if (!rollNoInput) {
+      return res.status(400).json({ success: false, message: 'Roll number or barcode is required' });
+    }
+
+    console.log(`[Handover Verification] Verifying roll number: ${rollNoInput.toUpperCase()} for item: ${item.itemName} (${item._id})`);
+
+    // Search for lost items from this student
+    const studentLostItems = await LostItem.find({
+      email: { $regex: new RegExp("^" + rollNoInput + "@", "i") }
+    });
+
+    if (!studentLostItems || studentLostItems.length === 0) {
+      console.warn(`[Handover Verification] Failed: No lost item reports found for student ${rollNoInput.toUpperCase()}`);
+      return res.status(400).json({
+        success: false,
+        message: `Verification failed. Student ${rollNoInput.toUpperCase()} does not have any lost item reports.`
+      });
+    }
+
+    const threshold = parseInt(process.env.MATCHING_THRESHOLD) || 50;
+    let bestMatch = null;
+    let highestScore = -1;
+
+    for (const lostItem of studentLostItems) {
+      const score = calculateMatchScore(lostItem, item);
+      if (score > highestScore) {
+        highestScore = score;
+        bestMatch = lostItem;
+      }
+    }
+
+    if (highestScore < threshold) {
+      console.warn(`[Handover Verification] Failed: Match score (${highestScore}%) below threshold (${threshold}%) for student ${rollNoInput.toUpperCase()}`);
+      return res.status(400).json({
+        success: false,
+        message: `Verification failed. Confidence score (${highestScore}%) is below the required threshold of ${threshold}%.`
+      });
+    }
+
+    // Try to find the student's name from Userstemp database
+    const studentUser = await User.findOne({
+      email: { $regex: new RegExp("^" + rollNoInput + "@", "i") }
+    });
+    const studentName = studentUser ? studentUser.name : "Student";
+
+    console.log(`[Handover Verification] Success: Verified owner ${studentName} (${rollNoInput.toUpperCase()}) with score ${highestScore}%`);
+
+    return res.json({
+      success: true,
+      message: 'Verification Success',
+      student: {
+        rollNo: rollNoInput.toUpperCase(),
+        name: studentName,
+        email: bestMatch.email
+      },
+      matchedItem: {
+        itemName: bestMatch.itemName,
+        category: bestMatch.category,
+        description: bestMatch.description,
+        score: highestScore
+      }
+    });
+  } catch (error) {
+    console.error('[Handover Verification] Database/Server Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error during verification' });
+  }
+});
+
+// Barcode Handover Confirmation Endpoint
+router.post('/:id/confirm-handover', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { barcodeValue, rollNo, name, contact, isManual } = req.body;
+
+    const item = await Item.findById(id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Found item not found' });
+    }
+
+    if (item.status === 'claimed') {
+      return res.status(400).json({ success: false, message: 'Item has already been handed over/claimed.' });
+    }
+
+    if (!rollNo) {
+      return res.status(400).json({ success: false, message: 'Student roll number is required' });
+    }
+
+    const adminEmail = req.admin ? req.admin.email : 'admin';
+
+    // Update FoundItem status and store handover details
+    item.status = 'claimed';
+    item.handoverDetails = {
+      handoverTime: new Date(),
+      handoverAdmin: adminEmail,
+      studentRollNumber: rollNo.toUpperCase(),
+      barcodeValue: barcodeValue || 'Manual Entry',
+      isManual: !!isManual
+    };
+
+    // Also populate claimerDetails for backward compatibility
+    item.claimerDetails = {
+      name: name || 'Student',
+      rollNo: rollNo.toUpperCase(),
+      contact: contact || 'N/A',
+      dateHandovered: new Date(),
+      proofs: []
+    };
+
+    await item.save();
+    console.log(`[Handover Confirmed] Item ID ${item._id} successfully handed over to ${rollNo.toUpperCase()} by admin ${adminEmail}`);
+
+    // Trigger In-App Notifications
+    const studentEmail = rollNo.toLowerCase() + "@vnrvjiet.in";
+    await Notification.create({
+      email: studentEmail,
+      title: "Item Handed Over",
+      description: `Your item "${item.itemName}" (Code: ${item.code}) has been securely handed over to you.`,
+      type: "success",
+      icon: "Gift",
+      relatedItem: item._id
+    });
+
+    // Trigger Email Notification
+    await sendEmail(
+      studentEmail,
+      "Item Handed Over - EasyFind",
+      `Your item "${item.itemName}" (Unique Code: ${item.code}) has been securely claimed and handed over to you by the Security Office.`
+    ).catch(err => console.error("Failed to send handover email:", err));
+
+    await Notification.create({
+      email: "admin",
+      title: "Secure Handover Completed",
+      description: `Item "${item.itemName}" (Code: ${item.code}) successfully handed over to student ${rollNo.toUpperCase()} via barcode scan.`,
+      type: "success",
+      icon: "Gift",
+      relatedItem: item._id
+    });
+
+    return res.json({
+      success: true,
+      message: 'Item handed over successfully',
+      item
+    });
+  } catch (error) {
+    console.error('[Handover Confirmation] Database/Server Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error during handover confirmation' });
   }
 });
 

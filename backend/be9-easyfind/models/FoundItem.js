@@ -64,6 +64,24 @@ const foundItemSchema = new mongoose.Schema(
             type: Date,
             default: Date.now,
         },
+        handoverDetails: {
+            handoverTime: {
+                type: Date,
+            },
+            handoverAdmin: {
+                type: String,
+            },
+            studentRollNumber: {
+                type: String,
+            },
+            barcodeValue: {
+                type: String,
+            },
+            isManual: {
+                type: Boolean,
+                default: false,
+            },
+        },
     },
     {
         timestamps: true,

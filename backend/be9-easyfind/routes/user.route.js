@@ -7,15 +7,46 @@ const { upload, cloudinary } = require('../config/cloudinary')
 const  auth =require('../middlewares/user-auth')
 const sendEmail = require("../utils/notifications");
 const stringSimilarity = require("string-similarity");
+const Notification = require("../models/Notification");
 
-const dispatchEmailJob = require("../utils/emailDispatcher");
+const { dispatchEmailJob } = require("../utils/emailDispatcher");
 
 // Submit a lost item
 router.post('/lost',auth, async (req, res) => {
     try {
+        // Security check: Verify that the email belongs to the authenticated user
+        if (!req.body.email || req.body.email.toLowerCase() !== req.user.email.toLowerCase()) {
+          return res.status(403).json({ message: "Forbidden: Cannot report lost item for another user's email" });
+        }
+
         const lostItem = new LostItem(req.body);
         await lostItem.save();
-        console.log("submitted item with details",lostItem)
+        console.log("submitted item with details",lostItem);
+        
+        // Trigger In-App Notifications
+        await Notification.create({
+          email: lostItem.email.toLowerCase(),
+          title: "Lost Report Submitted",
+          description: `Your lost report for "${lostItem.itemName}" has been successfully logged.`,
+          type: "success",
+          icon: "ClipboardList"
+        });
+
+        // Trigger Email Notification
+        await sendEmail(
+          lostItem.email.toLowerCase(),
+          "Lost Report Logged - EasyFind",
+          `Your lost report for "${lostItem.itemName}" has been successfully logged on EasyFind. We will notify you if a match is found.`
+        ).catch(err => console.error("Failed to send submission email:", err));
+
+        await Notification.create({
+          email: "admin",
+          title: "New Lost Report Submitted",
+          description: `Student has reported a lost "${lostItem.itemName}" at ${lostItem.location || 'unknown location'}.`,
+          type: "info",
+          icon: "ClipboardList"
+        });
+
         res.status(201).json({ message: 'Lost item submitted successfully', lostItem });
     } catch (error) {
         res.status(400).json({ message: 'Error submitting lost item', error });
@@ -75,6 +106,16 @@ router.post('/found', auth, upload.single('image'), async (req, res) => {
           });
       }
 
+      // Security check: Verify that reporterRollNo matches authenticated user's roll number from email
+      const atIndex = req.user.email.indexOf("@");
+      const userRollNo = atIndex !== -1 ? req.user.email.substring(0, atIndex).toUpperCase() : "";
+      if (reporterRollNo.toUpperCase() !== userRollNo) {
+          return res.status(403).json({
+              success: false,
+              message: "Forbidden: Cannot report found item under another student's roll number"
+          });
+      }
+
       // Generate a unique 4-character code
       const uniqueCode = await generateUniqueCode();
 
@@ -100,6 +141,32 @@ router.post('/found', auth, upload.single('image'), async (req, res) => {
       // Save the new item to the database
       const newItem = new Item(itemData);
       const savedItem = await newItem.save();
+
+      // Trigger In-App Notifications
+      await Notification.create({
+        email: req.user.email.toLowerCase(),
+        title: "Found Item Reported",
+        description: `Your report for "${itemName}" has been successfully logged. Status: Pending Verification.`,
+        type: "success",
+        icon: "Eye",
+        relatedItem: savedItem._id
+      });
+
+      // Trigger Email Notification
+      await sendEmail(
+        req.user.email.toLowerCase(),
+        "Found Item Report Logged - EasyFind",
+        `Your found item report for "${itemName}" has been successfully logged on EasyFind. Current status: Pending Verification by the Security Office.`
+      ).catch(err => console.error("Failed to send found report email:", err));
+
+      await Notification.create({
+        email: "admin",
+        title: "New Found Report Logged",
+        description: `Student has reported finding a "${itemName}" at "${foundLocation}".`,
+        type: "info",
+        icon: "Eye",
+        relatedItem: savedItem._id
+      });
 
       return res.status(201).json({
           success: true,
@@ -133,13 +200,23 @@ router.get('/found', auth, async (req, res) => {
 
   router.get('/reported/:id',auth,async(req,res)=>{
     const ID=req.params.id;
+    // Security check: Verify that roll number belongs to the logged in student
+    const atIndex = req.user.email.indexOf("@");
+    const userRollNo = atIndex !== -1 ? req.user.email.substring(0, atIndex).toUpperCase() : "";
+    if (ID.toUpperCase() !== userRollNo) {
+      return res.status(403).json({ message: "Forbidden: Cannot view reported items of another user" });
+    }
     const reportedItems=await Item.find({ reporterRollNo:ID}).select('code itemName status image description foundLocation category');
     res.send(reportedItems)
 
   })
-  router.get('/lost-items/:id',async(req,res)=>{
+  router.get('/lost-items/:id',auth,async(req,res)=>{
     try{
     const ID=req.params.id;
+    // Security check: Verify that the email matches the logged in student
+    if (ID.toLowerCase() !== req.user.email.toLowerCase()) {
+      return res.status(403).json({ message: "Forbidden: Cannot view lost items of another user" });
+    }
     const reportedItems=await LostItem.find({ email:ID});
     res.send(reportedItems)
     }catch(err){
@@ -153,8 +230,12 @@ router.get('/found', auth, async (req, res) => {
       const ID = req.params.id;
       const item = await LostItem.findById(ID);
       if (!item) return res.status(404).json({ message: "Item not found" });
-      // if (item.status === "verified") return res.status(403).json({ message: "Cannot delete an verified item" });
-  
+      
+      // Security check: Verify ownership
+      if (item.email.toLowerCase() !== req.user.email.toLowerCase()) {
+        return res.status(403).json({ message: "Forbidden: Cannot delete another user's lost item" });
+      }
+
       const deletedItem = await LostItem.findOneAndDelete({ _id: ID });
       res.json({ message: "Delete successful", payload: deletedItem });
     } catch (err) {
@@ -169,6 +250,14 @@ router.get('/found', auth, async (req, res) => {
       const ID = req.params.id;
       const item = await Item.findById(ID);
       if (!item) return res.status(404).json({ message: "Item not found" });
+
+      // Security check: Verify finder ownership
+      const atIndex = req.user.email.indexOf("@");
+      const userRollNo = atIndex !== -1 ? req.user.email.substring(0, atIndex).toUpperCase() : "";
+      if (item.reporterRollNo.toUpperCase() !== userRollNo) {
+        return res.status(403).json({ message: "Forbidden: Cannot delete another user's reported found item" });
+      }
+
       if (item.status === "approved") return res.status(403).json({ message: "Cannot delete an approved item" });
   
       const deletedItem = await Item.findOneAndDelete({ _id: ID });

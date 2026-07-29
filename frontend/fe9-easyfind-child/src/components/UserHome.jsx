@@ -1,176 +1,276 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const FEEDBACK_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || 'support@vjstartup.com';
+import { 
+  ClipboardList, 
+  Eye, 
+  MapPin, 
+  Clock, 
+  ShieldCheck, 
+  ArrowRight, 
+  X,
+  Layers
+} from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [lostItems, setLostItems] = useState([]);
+  const [foundItems, setFoundItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Fetch student items dynamically
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.email) return;
+      setLoading(true);
+      try {
+        const atIndex = user.email.indexOf("@");
+        const rollNo = atIndex !== -1 ? user.email.substring(0, atIndex) : "";
+
+        // 1. Fetch lost items reported by student
+        const lostRes = await fetch(`${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`, {
+          credentials: "include"
+        });
+        if (lostRes.ok) {
+          const lostData = await lostRes.json();
+          setLostItems(lostData);
+        }
+
+        // 2. Fetch found items reported by student
+        if (rollNo) {
+          const foundRes = await fetch(`${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/reported/${rollNo}`, {
+            credentials: "include"
+          });
+          if (foundRes.ok) {
+            const foundData = await foundRes.json();
+            setFoundItems(foundData);
+          }
+        }
+      } catch (err) {
+        console.error("Dashboard database fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user?.email]);
+
+  // Compute live statistics based on real data
+  const stats = [
+    { 
+      label: "Lost Reports", 
+      value: lostItems.length, 
+      sub: "Reports logged", 
+      badge: `↑ ${lostItems.filter(i => new Date(i.createdAt) > new Date(Date.now() - 7*24*60*60*1000)).length} this week`,
+      color: "from-rose-50 to-rose-100/50 border-rose-100 text-rose-600"
+    },
+    { 
+      label: "Found Reports", 
+      value: foundItems.length, 
+      sub: "Items found", 
+      badge: `↑ ${foundItems.filter(i => new Date(i.createdAt) > new Date(Date.now() - 7*24*60*60*1000)).length} this week`,
+      color: "from-emerald-50 to-emerald-100/50 border-emerald-100 text-emerald-600"
+    },
+    { 
+      label: "Ready for Collection", 
+      value: foundItems.filter(i => i.status === "verified").length, 
+      sub: "Action needed", 
+      badge: "~ 0 this week",
+      color: "from-blue-50 to-blue-100/50 border-blue-100 text-blue-600"
+    },
+    { 
+      label: "Returned Items", 
+      value: foundItems.filter(i => i.status === "claimed").length, 
+      sub: "Claims resolved", 
+      badge: "~ 0 this week",
+      color: "from-purple-50 to-purple-100/50 border-purple-100 text-purple-600"
+    }
+  ];
+
+  // Combine reported items to display inside the recent logs table
+  const recentReports = [...foundItems, ...lostItems.map(i => ({...i, reporterRollNo: 'self_lost'}))]
+    .sort((a, b) => new Date(b.createdAt || b.reportedDate) - new Date(a.createdAt || a.reportedDate))
+    .slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-gray-100 flex flex-col">
-      {/* Live Announcement Banner */}
-      <div className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 text-center">
-        <p className="text-sm font-medium">
-          🚀 Welcome to EasyFind – Your Trusted Campus Lost &amp; Found Solution
-        </p>
-      </div>
+    <div className="space-y-6">
+      {/* 1. Dashboard Welcome Banner */}
+      <div className="relative bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6 group">
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
+        <div className="absolute left-1/3 -bottom-12 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl"></div>
 
-      <div className="w-full max-w-6xl mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome, {user?.name || 'Valued User'}.
-          </h1>
-          <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto">
-            EasyFind is dedicated to ensuring that every lost item finds its way back to its owner. Please choose an option below to begin.
+        <div className="space-y-4 max-w-xl text-center md:text-left z-10">
+          <span className="inline-block bg-white/10 backdrop-blur border border-white/15 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
+            Student Hub
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+            Welcome back, {user?.name ? user.name.split(' ')[0] : 'Student'}! 👋
+          </h2>
+          <p className="text-indigo-100 text-xs sm:text-sm font-medium leading-relaxed">
+            Submit items you've lost or found on campus, monitor claims, and coordinate collections with the Security Office.
           </p>
         </div>
 
-        {/* Action Cards */}
-        <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-8 mb-12">
-          {/* Report Found Item Card */}
-          <div className="bg-white shadow-xl rounded-2xl p-6 w-full md:flex-1 min-h-[40rem] transition-transform transform hover:scale-105">
-            <div className="flex flex-col items-center text-center h-full justify-center">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M16 10a6 6 0 11-12 0 6 6 0 0112 0z"/>
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Discovered an Item?</h2>
-              <p className="text-gray-600 mb-4 max-w-sm">
-                Kindly report your discovery to assist in reuniting the item with its rightful owner.
-              </p>
-              <button
-                onClick={() => navigate('/dashboard/report-item')}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300 flex items-center"
-              >
-                Report an Item
-                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                </svg>
-              </button>
+        {/* Quick Actions Panel */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 z-10">
+          <button
+            onClick={() => navigate('/dashboard/lost-item')}
+            className="flex-1 sm:flex-initial bg-white hover:bg-slate-50 text-indigo-700 font-bold px-5 py-3 rounded-2xl text-xs transition duration-200 shadow-md shadow-indigo-900/20 flex items-center justify-center gap-2 group"
+          >
+            <ClipboardList className="w-4 h-4 text-indigo-600 transition-transform group-hover:-translate-y-0.5" />
+            Report Lost Item
+          </button>
+          <button
+            onClick={() => navigate('/dashboard/report-item')}
+            className="flex-1 sm:flex-initial bg-white/10 hover:bg-white/15 text-white font-bold px-5 py-3 rounded-2xl text-xs transition duration-200 border border-white/20 flex items-center justify-center gap-2"
+          >
+            <Eye className="w-4 h-4 text-white" />
+            Report Found Item
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Statistics Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map((stat, i) => (
+          <div key={i} className={`bg-gradient-to-br ${stat.color} border p-5 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.01]`}>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{stat.label}</span>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">{stat.value}</span>
+              <span className="text-[10px] text-slate-500 font-medium">{stat.sub}</span>
             </div>
+            <span className="inline-block mt-3 text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-100 rounded-full shadow-2xs">
+              {stat.badge}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* 3. Grid Columns for Recent Reports & Sidebar Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Recent Claims Table */}
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4">
+          <div className="flex justify-between items-center pb-2">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-base">My Recent Reports</h3>
+              <p className="text-[11px] text-slate-400 font-medium">Tracking logs of all your registered lost item claims.</p>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/my-reports')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group"
+            >
+              View All
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
           </div>
 
-          {/* Search Lost Item Card */}
-          <div className="bg-white shadow-xl rounded-2xl p-6 w-full md:flex-1 min-h-[40rem] transition-transform transform hover:scale-105">
-            <div className="flex flex-col items-center text-center h-full justify-center">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7l1.664 12.136A2 2 0 006.648 21h10.704a2 2 0 001.984-1.864L21 7m-18 0a2 2 0 012-2h14a2 2 0 012 2m-18 0h18"/>
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Misplaced an Item?</h2>
-              <p className="text-gray-600 mb-4 max-w-sm">
-                Please search our verified listings to locate and reclaim your valuable possessions.
-              </p>
-              <button
-                onClick={() => navigate('/dashboard/search-item')}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300 flex items-center"
-              >
-                Search for Items
-                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                </svg>
-              </button>
+          {loading ? (
+            <div className="py-12 flex flex-col items-center justify-center space-y-2">
+              <svg className="animate-spin h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-xs text-slate-400 font-medium">Fetching active claims...</span>
             </div>
-          </div>
+          ) : recentReports.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <span className="text-xs text-slate-400 font-medium block">No reported claims found.</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="pb-3 pr-2">Item</th>
+                    <th className="pb-3 px-2 hidden sm:table-cell">Category</th>
+                    <th className="pb-3 px-2">Status</th>
+                    <th className="pb-3 px-2 hidden md:table-cell">Date Reported</th>
+                    <th className="pb-3 pl-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 font-medium text-slate-700">
+                  {recentReports.map((item) => (
+                    <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3.5 pr-2">
+                        <div className="flex items-center gap-3">
+                          {item.image?.url ? (
+                            <img src={item.image.url} alt={item.itemName} className="w-10 h-10 rounded-lg object-cover shadow-2xs border border-slate-100" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100">
+                              <Layers className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-bold text-slate-800 block text-xs truncate max-w-[120px]">{item.itemName}</span>
+                            <span className="text-[10px] text-slate-400 block truncate max-w-[120px]">{item.description}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-2 hidden sm:table-cell">
+                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md font-bold text-[10px] tracking-wide">
+                          {item.category || "General"}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-2">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                          item.status === 'claimed'
+                            ? 'bg-purple-50 border-purple-100 text-purple-600'
+                            : item.status === 'verified'
+                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600'
+                            : 'bg-blue-50 border-blue-100 text-blue-600'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            item.status === 'claimed'
+                              ? 'bg-purple-500'
+                              : item.status === 'verified'
+                              ? 'bg-emerald-500'
+                              : 'bg-blue-500'
+                          }`}></span>
+                          {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : 'Submitted'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-2 hidden md:table-cell text-slate-400">
+                        {new Date(item.createdAt || item.reportedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </td>
+                      <td className="py-3.5 pl-2 text-right">
+                        <button
+                          onClick={() => setSelectedItem(item)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 font-bold rounded-lg transition-colors text-[10px]"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* How It Works Section */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100 transform hover:shadow-2xl transition-shadow duration-300">
-          <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center flex items-center justify-center gap-2">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
-            How It Works
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Found Item Process */}
-            <div className="bg-blue-50 rounded-xl p-6 relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-t-xl"/>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">1</span>
-                Report the Discovery
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Provide Detailed Information</p>
-                    <p className="text-gray-600 text-sm">
-                      Complete a concise form outlining the item’s description and attach a photograph.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Deposit the Item</p>
-                    <p className="text-gray-600 text-sm">
-                      Deliver the item to campus security for formal verification and secure handling.
-                    </p>
-                  </div>
+        {/* Right Column - Security Office Details */}
+        <div className="space-y-6">
+          {/* Refined Security Office Card */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-4">
+            <h3 className="font-extrabold text-slate-800 text-base">Security Office</h3>
+            
+            <div className="space-y-4 text-xs text-slate-650 font-semibold">
+              <div className="flex gap-3.5 items-start">
+                <MapPin className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-slate-800 block">Location</span>
+                  <span className="text-slate-500 text-[11px] font-medium">B-Block</span>
                 </div>
               </div>
-            </div>
-
-            {/* Lost Item Process */}
-            <div className="bg-purple-50 rounded-xl p-6 relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded-t-xl"/>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center">2</span>
-                Locate and Reclaim
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-white border-2 border-purple-200 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Search the Catalogued Listings</p>
-                    <p className="text-gray-600 text-sm">
-                      Meticulously review the reported items to identify your lost possession.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-white border-2 border-purple-200 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Receive Timely Alerts</p>
-                    <p className="text-gray-600 text-sm">
-                      Our system will notify you promptly should a matching item be identified.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-white border-2 border-purple-200 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Confirm and Reclaim</p>
-                    <p className="text-gray-600 text-sm">
-                      Once verified, proceed with the secure process to retrieve your item.
-                    </p>
-                  </div>
+              
+              <div className="flex gap-3.5 items-start">
+                <Clock className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-slate-800 block">Timings</span>
+                  <span className="text-slate-500 text-[11px] font-medium">9:00 AM – 4:40 PM</span>
                 </div>
               </div>
             </div>
@@ -178,21 +278,113 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Footer with Feedback Button */}
-      <footer className="mt-auto w-full border-t border-gray-200 bg-white/80 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-center">
-          <a
-            href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('EasyFind Feedback')}&body=${encodeURIComponent('Hi EasyFind Team,\n\nI would like to share the following feedback:\n\n')}`}
-            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow hover:bg-blue-700 transition-colors"
-          >
-            Send Feedback
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 2L11 13" />
-              <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-            </svg>
-          </a>
+      {/* 4. Bottom Campaign Banner */}
+      <div className="bg-gradient-to-r from-slate-100 to-indigo-50 border border-slate-200/40 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-center gap-6 relative overflow-hidden group">
+        <div className="absolute right-0 bottom-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-lg"></div>
+        <div className="flex gap-4 items-center text-center sm:text-left flex-col sm:flex-row">
+          <div className="p-3 bg-white rounded-2xl shadow-sm text-indigo-600 shrink-0">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <div>
+            <h4 className="font-black text-slate-800 text-sm">Together, we make our campus better</h4>
+            <p className="text-[11px] text-slate-400 max-w-md mt-1 leading-relaxed">
+              Your reports help keep the campus safe and ensure every item finds its way back to its right owner.
+            </p>
+          </div>
         </div>
-      </footer>
+        <button
+          onClick={() => navigate('/dashboard/search-item')}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md transition duration-200"
+        >
+          Start Browsing
+        </button>
+      </div>
+
+      {/* 5. Item Details Popup Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-6 py-4 flex items-center justify-between">
+              <div>
+                <h4 className="text-base font-bold">Item Claim Details</h4>
+                <p className="text-[10px] text-indigo-200 font-mono mt-0.5">Code: {selectedItem.code || "N/A"}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="text-white hover:text-indigo-100 p-1 rounded-lg transition-colors"
+                aria-label="Close details"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              {selectedItem.image?.url && (
+                <div className="aspect-video w-full rounded-2xl overflow-hidden border border-slate-100 shadow-2xs">
+                  <img src={selectedItem.image.url} alt={selectedItem.itemName} className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              <div className="space-y-3.5 text-xs">
+                <div>
+                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Item Name</span>
+                  <span className="font-extrabold text-slate-800 text-sm">{selectedItem.itemName}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Category</span>
+                    <span className="font-bold text-slate-700 mt-0.5 block">{selectedItem.category || "General"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Status</span>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full font-bold text-[10px] mt-0.5 ${
+                      selectedItem.status === 'claimed'
+                        ? 'bg-purple-50 text-purple-600'
+                        : selectedItem.status === 'verified'
+                        ? 'bg-emerald-50 text-emerald-600'
+                        : 'bg-blue-50 text-blue-600'
+                    }`}>
+                      {selectedItem.status ? selectedItem.status.toUpperCase() : 'SUBMITTED'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Description</span>
+                  <p className="text-slate-600 italic bg-slate-50 p-3 rounded-xl border border-slate-100 mt-1 leading-relaxed">
+                    "{selectedItem.description}"
+                  </p>
+                </div>
+
+                {selectedItem.foundLocation && (
+                  <div>
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Reported Location</span>
+                    <span className="font-semibold text-slate-700 mt-0.5 block">{selectedItem.foundLocation}</span>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Date Reported</span>
+                  <span className="font-semibold text-slate-700 mt-0.5 block">
+                    {new Date(selectedItem.createdAt || selectedItem.reportedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs transition duration-200"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -20,11 +20,13 @@ const sendEmail = async (to, subject, body, isHTML = false) => {
 
    const info = await transporter.sendMail(mailOptions);
 
-console.log("Message ID:", info.messageId);
-console.log("SMTP Response:", info.response);
-console.log(`Email sent to ${to}`);
+    console.log("Message ID:", info.messageId);
+    console.log("SMTP Response:", info.response);
+    console.log(`Email sent to ${to}`);
+    return info;
   } catch (error) {
     console.error("Error sending email:", error);
+    throw error; // Rethrow to let the caller handle it
   }
 };
 
