@@ -19,7 +19,7 @@ Backend  (Workstation2)
 
 # Servers
 
-## Google SSO Backend
+## Google SSO Backend.
 
 ## EduPrime SSO Backend
  Port 10.45.30.251:5001
