@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  be9-easyfind:
+    build:
+      context: ./backend/be9-easyfind
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/be9-easyfind/.env
+    restart: always
+
+  auth-server:
+    build:
+      context: ./backend/auth-server
+    ports:
+      - "2999:2999"
+    env_file:
+      - ./backend/auth-server/.env
+    restart: always
+
+  fe9-easyfind-admin:
+    build:
+      context: ./frontend/fe9-easyfind-admin
+    ports:
+      - "3109:80"
+    restart: always
+
+  fe9-easyfind-child:
+    build:
+      context: ./frontend/fe9-easyfind-child
+    ports:
+      - "3110:80" # Using 3110 for child frontend to avoid conflict with admin on 3109
+    restart: always
