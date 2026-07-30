@@ -64,7 +64,48 @@ jobs:
           VITE_EASYFIND_BACKEND_URL=${{ secrets.BACKEND_URL }}
           EOF
           else
-            echo "Secrets not found in GitHub environment. Using existing .env files from the runner."
+            echo "Secrets not found in GitHub environment. Using default fallback .env files."
+            
+            # backend/be9-easyfind
+            cat << 'EOF' > backend/be9-easyfind/.env
+          CLOUDINARY_CLOUD_NAME=
+          CLOUDINARY_API_KEY=
+          CLOUDINARY_API_SECRET=
+          CLOUDINARY_URL=
+          GOOGLE_CLIENT_ID=
+          PORT=5000
+          MONGODB_URI=mongodb://127.0.0.1:27017/easyfind
+          JWT_SECRET=easyfind123
+          AUTH_JWT_SECRET=easyfind-secret
+          ADMIN_EMAILS=25075a0523@vnrvjiet.in
+          AUTH_SERVER_URL=http://localhost:2999
+          FRONTEND_URL=http://localhost:3109
+          BACKEND_URL=http://localhost:5000
+          EMAIL_USER=25075a0523@vnrvjiet.in
+          EMAIL_PASS=
+          MATCHING_THRESHOLD=50
+          EOF
+
+            # backend/auth-server
+            cat << 'EOF' > backend/auth-server/.env
+          PORT=2999
+          JWT_SECRET=easyfind-secret
+          GOOGLE_CLIENT_ID=
+          EOF
+
+            # frontend/fe9-easyfind-admin
+            cat << 'EOF' > frontend/fe9-easyfind-admin/.env
+          VITE_AUTH_BASE_URL=http://localhost:2999
+          VITE_EASYFIND_BACKEND_URL=http://localhost:5000
+          VITE_ADMIN_EMAILS=25075a0523@vnrvjiet.in
+          EOF
+
+            # frontend/fe9-easyfind-child
+            cat << 'EOF' > frontend/fe9-easyfind-child/.env
+          VITE_AUTH_BASE_URL=http://localhost:2999
+          VITE_BACKEND_URL=http://localhost:5000
+          VITE_EASYFIND_BACKEND_URL=http://localhost:5000
+          EOF
           fi
 
       - name: Build and Deploy with Docker Compose
