@@ -8,9 +8,9 @@ on:
 
 jobs:
   deploy:
-    runs-on: $\{{ github.ref == 'refs/heads/main' && 'gamma' || 'dev-ai' }}
+    runs-on: ${{ github.ref == 'refs/heads/main' && 'gamma' || 'dev-ai' }}
     environment:
-      name: $\{{ github.ref == 'refs/heads/main' && 'easyfind-production' || 'easyfind-development' }}
+      name: ${{ github.ref == 'refs/heads/main' && 'easyfind-production' || 'easyfind-development' }}
 
     steps:
       - name: Checkout Code
@@ -21,7 +21,7 @@ jobs:
           echo "Generating .env files from GitHub Secrets..."
           
           # Debug to verify if the secret is being passed at all
-          if [ -z "$\{{ secrets.GOOGLE_CLIENT_ID }}" ]; then
+          if [ -z "${{ secrets.GOOGLE_CLIENT_ID }}" ]; then
             echo "WARNING: GOOGLE_CLIENT_ID secret is empty or unavailable!"
           else
             echo "GOOGLE_CLIENT_ID secret is populated."
@@ -29,54 +29,54 @@ jobs:
 
           # backend/be9-easyfind
           cat << 'EOF' | sed 's/^[ \t]*//' > backend/be9-easyfind/.env
-          CLOUDINARY_CLOUD_NAME=$\{{ secrets.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY=$\{{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET=$\{{ secrets.CLOUDINARY_API_SECRET }}
-          CLOUDINARY_URL=$\{{ secrets.CLOUDINARY_URL }}
-          GOOGLE_CLIENT_ID=$\{{ secrets.GOOGLE_CLIENT_ID }}
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          CLOUDINARY_URL=${{ secrets.CLOUDINARY_URL }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           PORT=5000
-          MONGODB_URI=$\{{ secrets.MONGODB_URI }}
-          JWT_SECRET=$\{{ secrets.JWT_SECRET }}
-          AUTH_JWT_SECRET=$\{{ secrets.AUTH_JWT_SECRET }}
-          ADMIN_EMAILS=$\{{ secrets.ADMIN_EMAILS }}
-          AUTH_SERVER_URL=$\{{ secrets.AUTH_SERVER_URL }}
-          FRONTEND_URL=$\{{ secrets.FRONTEND_URL }}
-          BACKEND_URL=$\{{ secrets.BACKEND_URL }}
-          EMAIL_USER=$\{{ secrets.EMAIL_USER }}
-          EMAIL_PASS=$\{{ secrets.EMAIL_PASS }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          AUTH_JWT_SECRET=${{ secrets.AUTH_JWT_SECRET }}
+          ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }}
+          AUTH_SERVER_URL=${{ secrets.AUTH_SERVER_URL }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          BACKEND_URL=${{ secrets.BACKEND_URL }}
+          EMAIL_USER=${{ secrets.EMAIL_USER }}
+          EMAIL_PASS=${{ secrets.EMAIL_PASS }}
           MATCHING_THRESHOLD=50
           EOF
 
           # backend/auth-server
           cat << 'EOF' | sed 's/^[ \t]*//' > backend/auth-server/.env
           PORT=2999
-          JWT_SECRET=$\{{ secrets.AUTH_JWT_SECRET }}
-          GOOGLE_CLIENT_ID=$\{{ secrets.GOOGLE_CLIENT_ID }}
+          JWT_SECRET=${{ secrets.AUTH_JWT_SECRET }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           EOF
 
           # frontend/fe9-easyfind-admin
           cat << 'EOF' | sed 's/^[ \t]*//' > frontend/fe9-easyfind-admin/.env
-          VITE_AUTH_BASE_URL=$\{{ secrets.AUTH_SERVER_URL }}
-          VITE_EASYFIND_BACKEND_URL=$\{{ secrets.BACKEND_URL }}
-          VITE_ADMIN_EMAILS=$\{{ secrets.ADMIN_EMAILS }}
-          VITE_GOOGLE_CLIENT_ID=$\{{ secrets.GOOGLE_CLIENT_ID }}
+          VITE_AUTH_BASE_URL=${{ secrets.AUTH_SERVER_URL }}
+          VITE_EASYFIND_BACKEND_URL=${{ secrets.BACKEND_URL }}
+          VITE_ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }}
+          VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           EOF
 
           # frontend/fe9-easyfind-child
           cat << 'EOF' | sed 's/^[ \t]*//' > frontend/fe9-easyfind-child/.env
-          VITE_AUTH_BASE_URL=$\{{ secrets.AUTH_SERVER_URL }}
-          VITE_BACKEND_URL=$\{{ secrets.BACKEND_URL }}
-          VITE_EASYFIND_BACKEND_URL=$\{{ secrets.BACKEND_URL }}
-          VITE_GOOGLE_CLIENT_ID=$\{{ secrets.GOOGLE_CLIENT_ID }}
+          VITE_AUTH_BASE_URL=${{ secrets.AUTH_SERVER_URL }}
+          VITE_BACKEND_URL=${{ secrets.BACKEND_URL }}
+          VITE_EASYFIND_BACKEND_URL=${{ secrets.BACKEND_URL }}
+          VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           EOF
 
       - name: Build and Deploy with Docker Compose
         env:
-          VITE_AUTH_BASE_URL: $\{{ secrets.AUTH_SERVER_URL }}
-          VITE_EASYFIND_BACKEND_URL: $\{{ secrets.BACKEND_URL }}
-          VITE_BACKEND_URL: $\{{ secrets.BACKEND_URL }}
-          VITE_ADMIN_EMAILS: $\{{ secrets.ADMIN_EMAILS }}
-          VITE_GOOGLE_CLIENT_ID: $\{{ secrets.GOOGLE_CLIENT_ID }}
+          VITE_AUTH_BASE_URL: ${{ secrets.AUTH_SERVER_URL }}
+          VITE_EASYFIND_BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          VITE_BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          VITE_ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: |
           docker compose down
           docker compose up -d --build
