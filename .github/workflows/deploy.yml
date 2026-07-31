@@ -71,6 +71,12 @@ jobs:
           EOF
 
       - name: Build and Deploy with Docker Compose
+        env:
+          VITE_AUTH_BASE_URL: ${{ secrets.AUTH_SERVER_URL }}
+          VITE_EASYFIND_BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          VITE_BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          VITE_ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: |
           docker compose down
           docker compose up -d --build
