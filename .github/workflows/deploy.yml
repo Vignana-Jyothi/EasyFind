@@ -55,6 +55,7 @@ jobs:
           VITE_AUTH_BASE_URL=${{ secrets.AUTH_SERVER_URL }}
           VITE_EASYFIND_BACKEND_URL=${{ secrets.BACKEND_URL }}
           VITE_ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }}
+          VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           EOF
 
             # frontend/fe9-easyfind-child
@@ -62,6 +63,7 @@ jobs:
           VITE_AUTH_BASE_URL=${{ secrets.AUTH_SERVER_URL }}
           VITE_BACKEND_URL=${{ secrets.BACKEND_URL }}
           VITE_EASYFIND_BACKEND_URL=${{ secrets.BACKEND_URL }}
+          VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           EOF
           else
             echo "Secrets not found in GitHub environment. Using default fallback .env files."
@@ -98,6 +100,7 @@ jobs:
           VITE_AUTH_BASE_URL=http://localhost:2999
           VITE_EASYFIND_BACKEND_URL=http://localhost:5000
           VITE_ADMIN_EMAILS=25075a0523@vnrvjiet.in
+          VITE_GOOGLE_CLIENT_ID=
           EOF
 
             # frontend/fe9-easyfind-child
@@ -105,6 +108,7 @@ jobs:
           VITE_AUTH_BASE_URL=http://localhost:2999
           VITE_BACKEND_URL=http://localhost:5000
           VITE_EASYFIND_BACKEND_URL=http://localhost:5000
+          VITE_GOOGLE_CLIENT_ID=
           EOF
           fi
 

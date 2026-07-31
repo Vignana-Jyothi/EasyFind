@@ -3,7 +3,7 @@ import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode'; 
 
-const clientId = "99061194438-8n8t6moc8n7aj5l1l12435ju9kj2rqjq.apps.googleusercontent.com";
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const BE_URL = import.meta.env.VITE_EASYFIND_BACKEND_URL;
 
 const allowedEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
