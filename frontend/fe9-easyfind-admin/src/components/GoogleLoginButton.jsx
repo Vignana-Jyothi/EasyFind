@@ -8,6 +8,7 @@ const BE_URL = import.meta.env.VITE_EASYFIND_BACKEND_URL;
 
 const allowedEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
 console.log("allowed mails",allowedEmails)
+console.log("HELLO WORLD FROM ANTIGRAVITY DEPLOYMENT");
 
 const WrappedGoogleLoginButton = () => {
   const navigate = useNavigate();
