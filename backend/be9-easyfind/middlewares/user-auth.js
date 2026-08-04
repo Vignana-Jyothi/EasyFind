@@ -44,7 +44,12 @@ const auth = (req, res, next) => {
     next();
   } catch (err) {
     console.error("❌ Invalid token:", err.message);
-    res.status(401).json({ message: "Unauthorized: Invalid or expired token" });
+    res.status(401).json({ 
+      message: "Unauthorized: Invalid or expired token", 
+      error: err.message, 
+      tokenLength: token.length, 
+      secretLength: (process.env.AUTH_JWT_SECRET || "").length 
+    });
   }
 };
 
