@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const BE_URL = import.meta.env.VITE_EASYFIND_BACKEND_URL;
 
-const allowedEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
+const allowedEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
 console.log("allowed mails",allowedEmails)
 console.log("HELLO WORLD FROM ANTIGRAVITY DEPLOYMENT");
 
