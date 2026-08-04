@@ -1,4 +1,4 @@
-# Developer Guidelines for vj-servers.
+# Developer Guidelines for vj-servers
 
 This repository hosts multiple backend and frontend services. Follow these steps to work safely across DEV and PROD without unintentionally affecting other apps.
 
