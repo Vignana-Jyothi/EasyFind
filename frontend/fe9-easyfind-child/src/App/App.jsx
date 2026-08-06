@@ -40,6 +40,19 @@ const App = () => {
             <Route path="notifications" element={<NotificationsPage />} />
           </Route>
 
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+          </Route>
+
           {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

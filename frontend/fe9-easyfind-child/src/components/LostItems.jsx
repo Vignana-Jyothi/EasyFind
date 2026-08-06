@@ -20,7 +20,9 @@ function LostItems() {
           `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`,
           { withCredentials: true }
         );
-        setItems(Array.isArray(res.data) ? res.data : []);
+        const data = Array.isArray(res.data) ? res.data : [];
+        data.sort((a, b) => new Date(b.createdAt || b.dateLost) - new Date(a.createdAt || a.dateLost));
+        setItems(data);
       } catch (err) {
         console.error("Failed to fetch lost items:", err);
         setError("Failed to load active lost reports.");
@@ -50,7 +52,9 @@ function LostItems() {
         `${import.meta.env.VITE_EASYFIND_BACKEND_URL}/api/items/lost-items/${user.email}`,
         { withCredentials: true }
       );
-      setItems(Array.isArray(res.data) ? res.data : []);
+      const data = Array.isArray(res.data) ? res.data : [];
+      data.sort((a, b) => new Date(b.createdAt || b.dateLost) - new Date(a.createdAt || a.dateLost));
+      setItems(data);
     }
   };
 

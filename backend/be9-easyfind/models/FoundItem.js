@@ -82,6 +82,9 @@ const foundItemSchema = new mongoose.Schema(
                 default: false,
             },
         },
+        verifiedAt: {
+            type: Date,
+        },
     },
     {
         timestamps: true,

@@ -95,6 +95,46 @@ const Dashboard = () => {
     .sort((a, b) => new Date(b.createdAt || b.reportedDate) - new Date(a.createdAt || a.reportedDate))
     .slice(0, 5);
 
+  const getStatusBadge = (item) => {
+    const isLost = item.reporterRollNo === 'self_lost';
+    const status = (item.status || 'pending').toLowerCase();
+    
+    if (isLost) {
+      if (status === 'claimed') {
+        return {
+          text: 'Claimed',
+          bg: 'bg-purple-50 border-purple-100 text-purple-600',
+          dot: 'bg-purple-500'
+        };
+      }
+      if (status === 'verified') {
+        return {
+          text: 'Ready for Collection',
+          bg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+          dot: 'bg-emerald-500'
+        };
+      }
+      return {
+        text: 'Pending Verification',
+        bg: 'bg-blue-50 border-blue-100 text-blue-600',
+        dot: 'bg-blue-500'
+      };
+    } else {
+      if (status === 'verified' || status === 'claimed') {
+        return {
+          text: 'Handed Over to Security Office',
+          bg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+          dot: 'bg-emerald-500'
+        };
+      }
+      return {
+        text: 'Pending Handover',
+        bg: 'bg-amber-50 border-amber-100 text-amber-600',
+        dot: 'bg-amber-500'
+      };
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Dashboard Welcome Banner */}
@@ -102,10 +142,7 @@ const Dashboard = () => {
         <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500"></div>
         <div className="absolute left-1/3 -bottom-12 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl"></div>
 
-        <div className="space-y-4 max-w-xl text-center md:text-left z-10">
-          <span className="inline-block bg-white/10 backdrop-blur border border-white/15 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
-            Student Hub
-          </span>
+        <div className="space-y-2.5 max-w-xl text-center md:text-left z-10">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
             Welcome back, {user?.name ? user.name.split(' ')[0] : 'Student'}! 👋
           </h2>
@@ -215,22 +252,15 @@ const Dashboard = () => {
                         </span>
                       </td>
                       <td className="py-3.5 px-2">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                          item.status === 'claimed'
-                            ? 'bg-purple-50 border-purple-100 text-purple-600'
-                            : item.status === 'verified'
-                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600'
-                            : 'bg-blue-50 border-blue-100 text-blue-600'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            item.status === 'claimed'
-                              ? 'bg-purple-500'
-                              : item.status === 'verified'
-                              ? 'bg-emerald-500'
-                              : 'bg-blue-500'
-                          }`}></span>
-                          {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : 'Submitted'}
-                        </span>
+                        {(() => {
+                          const badge = getStatusBadge(item);
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.bg}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
+                              {badge.text}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="py-3.5 px-2 hidden md:table-cell text-slate-400">
                         {new Date(item.createdAt || item.reportedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}

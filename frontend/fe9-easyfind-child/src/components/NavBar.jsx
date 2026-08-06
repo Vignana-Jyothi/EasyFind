@@ -55,17 +55,20 @@ const Header = () => {
 
       {/* Right User Bar */}
       {user && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 font-sans">
           <button 
-            onClick={() => navigate('/dashboard?focus=notifications')}
-            className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
+            onClick={() => navigate('/notifications')}
+            className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
             aria-label="View notifications"
           >
             <Bell className="w-[18px] h-[18px]" />
             <span className="absolute top-1 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
           </button>
 
-          <div className="flex items-center gap-2.5 border-l border-slate-100 pl-3">
+          <div 
+            onClick={() => navigate('/profile')}
+            className="flex items-center gap-2.5 border-l border-slate-100 pl-3 cursor-pointer hover:opacity-80 transition-all duration-200"
+          >
             {/* Student avatar placeholder */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-500 text-white flex items-center justify-center font-bold text-xs shadow-inner">
               {user.name ? user.name.charAt(0).toUpperCase() : 'S'}

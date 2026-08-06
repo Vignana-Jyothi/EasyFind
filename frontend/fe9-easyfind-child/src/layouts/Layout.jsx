@@ -27,8 +27,8 @@ const Layout = () => {
     { text: "Report Found Item", path: "/dashboard/report-item", icon: Eye },
     { text: "Search Items", path: "/dashboard/search-item", icon: Search },
     { text: "My Reports", path: "/dashboard/my-reports", icon: FileText },
-    { text: "Notifications", path: "/dashboard/notifications", icon: Bell },
-    { text: "Profile", path: "/dashboard/user-profile", icon: User },
+    { text: "Notifications", path: "/notifications", icon: Bell },
+    { text: "Profile", path: "/profile", icon: User },
   ];
 
   // Fetch dynamic unread count from the backend
@@ -156,9 +156,9 @@ const Layout = () => {
           <span>Reports</span>
         </Link>
         <Link
-          to="/dashboard/notifications"
+          to="/notifications"
           className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${
-            location.pathname === "/dashboard/notifications" ? "text-indigo-600" : "text-slate-400"
+            location.pathname === "/notifications" ? "text-indigo-600" : "text-slate-400"
           }`}
         >
           <div className="relative">
@@ -172,9 +172,9 @@ const Layout = () => {
           <span>Alerts</span>
         </Link>
         <Link
-          to="/dashboard/user-profile"
+          to="/profile"
           className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
-            location.pathname === "/dashboard/user-profile" ? "text-indigo-600" : "text-slate-400"
+            location.pathname === "/profile" ? "text-indigo-600" : "text-slate-400"
           }`}
         >
           <User className="w-5 h-5" />

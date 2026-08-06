@@ -7,6 +7,7 @@ const GoogleLoginButton = () => {
   const { loginWithGoogle, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [errorModal, setErrorModal] = useState({ isOpen: false, title: "", message: "" });
 
   // If already authenticated, redirect to dashboard
   useEffect(() => {
@@ -17,6 +18,7 @@ const GoogleLoginButton = () => {
 
   const handleSuccess = async (credentialResponse) => {
     try {
+      setError("");
       console.log("✅ ID Token:", credentialResponse.credential);
 
       // Call login function from context
@@ -26,7 +28,34 @@ const GoogleLoginButton = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("❌ Login error:", error);
-      setError("Login failed. Please try again.");
+      
+      let title = "Login Failed";
+      let message = "Authentication failed. Please try again.";
+
+      if (error.status === 403) {
+        title = "Access Denied";
+        message = "EasyFind can only be accessed using an official VNR VJIET Google account. Please sign in using your college email address.";
+      } else if (error.status === 401) {
+        title = "Authentication Failed";
+        message = "Authentication failed. Please try again.";
+      } else if (error.status === 500) {
+        title = "Server Error";
+        message = "Server error. Please try again later.";
+      } else if (error.message && (error.message.includes("fetch") || error.message.includes("Network Error") || error.message.includes("Failed to fetch"))) {
+        title = "Network Error";
+        message = "Unable to connect to the server. Please check your network connection.";
+      } else if (error.message && (error.message.includes("timeout") || error.message.includes("Timeout"))) {
+        title = "Timeout";
+        message = "Request timed out. Please try again.";
+      } else if (error.message) {
+        message = error.message;
+      }
+
+      setErrorModal({
+        isOpen: true,
+        title,
+        message
+      });
     }
   };
 
@@ -58,7 +87,11 @@ const GoogleLoginButton = () => {
             onSuccess={handleSuccess}
             onError={() => {
               console.error('❌ Login Failed');
-              setError('Google Sign-In failed. Please try again.');
+              setErrorModal({
+                isOpen: true,
+                title: "Google Sign-In Failed",
+                message: "Google Sign-In failed. Please try again."
+              });
             }}
           />
         </div>
@@ -78,6 +111,30 @@ const GoogleLoginButton = () => {
           </div>
         )}
       </div>
+
+      {errorModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in font-sans">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm overflow-hidden border border-slate-100 p-6 space-y-6 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-100 shrink-0">
+                <span className="text-2xl" role="img" aria-label="Access Denied">🚫</span>
+              </div>
+              <h3 className="font-extrabold text-slate-800 text-lg leading-tight mt-1">{errorModal.title}</h3>
+            </div>
+            
+            <p className="text-slate-650 text-xs font-semibold leading-relaxed px-2">
+              {errorModal.message}
+            </p>
+
+            <button
+              onClick={() => setErrorModal({ isOpen: false, title: "", message: "" })}
+              className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-xl text-xs transition duration-200 cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
