@@ -262,7 +262,11 @@ router.patch("/updatestatus", auth, async (req, res) => {
       return res.status(400).json({ message: "Cannot change claimed item back to pending" });
     }
 
-    await Item.updateOne({ _id: id }, { $set: { status } });
+    const updateFields = { status };
+    if (status === "verified") {
+      updateFields.verifiedAt = new Date();
+    }
+    await Item.updateOne({ _id: id }, { $set: updateFields });
 
     // Trigger In-App Notifications
     if (status === "verified") {

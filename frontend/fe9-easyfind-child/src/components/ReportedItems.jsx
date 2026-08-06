@@ -33,7 +33,9 @@ function ReportedItems() {
         }
 
         const data = await response.json();
-        setItems(data);
+        const sorted = Array.isArray(data) ? data : [];
+        sorted.sort((a, b) => new Date(b.createdAt || b.reportedDate) - new Date(a.createdAt || a.reportedDate));
+        setItems(sorted);
       } catch (err) {
         console.error("Failed to fetch reported items:", err);
         setError("Failed to fetch reported items.");

@@ -11,7 +11,8 @@ import {
   Bell, 
   Calendar,
   ShieldCheck,
-  Edit
+  Edit,
+  User
 } from 'lucide-react';
 import AdminDashboard from "./components/Dashboard";
 import ApproveItems from "./components/ManageItems";
@@ -22,6 +23,7 @@ import NotificationsPage from "./components/NotificationsPage";
 import GoogleLoginButton from './components/GoogleLoginButton';
 import ProtectedRoute from './contexts/ProtectedRoute';
 import NotFound from './components/NotFound';
+import AdminProfile from "./components/AdminProfile";
 
 function AppContent() {
   const location = useLocation();
@@ -168,7 +170,7 @@ function AppContent() {
       </aside>
 
       {/* 2. Workspace Body Container */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         {/* Top Header navbar */}
         <header className="sticky top-0 z-30 bg-white border-b border-slate-100 p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -187,7 +189,7 @@ function AppContent() {
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => navigate('/admin/notifications')}
-                className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+                className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                 title="Notifications"
               >
                 <Bell className="w-4.5 h-4.5" />
@@ -198,11 +200,14 @@ function AppContent() {
                 )}
               </button>
 
-              <div className="flex items-center gap-2.5 border-l border-slate-100 pl-3">
+              <div 
+                onClick={() => navigate('/admin/profile')}
+                className="flex items-center gap-2.5 border-l border-slate-100 pl-3 cursor-pointer hover:opacity-80 transition-all duration-200"
+              >
                 <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
                   A
                 </div>
-                <div className="text-left">
+                <div className="text-left font-sans">
                   <span className="text-xs font-bold text-slate-850 block leading-none">Admin</span>
                   <span className="text-[9px] text-slate-400 block mt-0.5 font-mono">Security Office</span>
                 </div>
@@ -221,10 +226,76 @@ function AppContent() {
             <Route path="/admin/upload" element={<ProtectedRoute><UploadItem /></ProtectedRoute>} />
             <Route path="/admin/edit" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
             <Route path="/admin/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+            <Route path="/admin/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>
+
+      {/* 3. Bottom Navigation - Mobile Devices (lg:hidden) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 flex items-center justify-around py-2.5 z-40 shadow-lg px-2 text-[10px] font-bold text-slate-400">
+        <Link
+          to="/admin"
+          className={`flex flex-col items-center gap-1 ${
+            (location.pathname === "/admin" || location.pathname === "/") ? "text-indigo-600" : "text-slate-400"
+          }`}
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span>Home</span>
+        </Link>
+        <Link
+          to="/admin/approve"
+          className={`flex flex-col items-center gap-1 ${
+            location.pathname === "/admin/approve" ? "text-indigo-600" : "text-slate-400"
+          }`}
+        >
+          <Sparkles className="w-5 h-5" />
+          <span>AI Matches</span>
+        </Link>
+        <Link
+          to="/admin/upload"
+          className={`flex flex-col items-center gap-1 ${
+            location.pathname === "/admin/upload" ? "text-indigo-600" : "text-slate-400"
+          }`}
+        >
+          <PlusCircle className="w-5 h-5" />
+          <span>New Found</span>
+        </Link>
+        <Link
+          to="/admin/give"
+          className={`flex flex-col items-center gap-1 ${
+            location.pathname === "/admin/give" ? "text-indigo-600" : "text-slate-400"
+          }`}
+        >
+          <ScanBarcode className="w-5 h-5" />
+          <span>Handover</span>
+        </Link>
+        <Link
+          to="/admin/notifications"
+          className={`flex flex-col items-center gap-1 relative ${
+            location.pathname === "/admin/notifications" ? "text-indigo-600" : "text-slate-400"
+          }`}
+        >
+          <div className="relative">
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          <span>Alerts</span>
+        </Link>
+        <Link
+          to="/admin/profile"
+          className={`flex flex-col items-center gap-1 ${
+            location.pathname === "/admin/profile" ? "text-indigo-600" : "text-slate-400"
+          }`}
+        >
+          <User className="w-5 h-5" />
+          <span>Profile</span>
+        </Link>
+      </nav>
     </div>
   );
 }
