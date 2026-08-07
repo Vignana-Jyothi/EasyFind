@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   // ✅ Called when user logs in with Google
   const loginWithGoogle = async (idToken) => {
     try {
-      console.log("reached login with google",idToken)
+      console.log("reached login with google", idToken)
       const res = await fetch(`${AUTH_API_URL}/auth/google`, {
         method: "POST",
         credentials: "include",
@@ -65,14 +65,24 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ token: idToken }),
       });
 
-      if (!res.ok) throw new Error("Login failed");
+      if (!res.ok) {
+        let errData = {};
+        try {
+          errData = await res.json();
+        } catch (_) {}
+        const error = new Error(errData.message || errData.error || "Login failed");
+        error.status = res.status;
+        throw error;
+      }
 
-  const data = await res.json();
+      const data = await res.json();
       console.log(data);
-  setUser(data.user);
-  setToken(null); // cookie-only; don't persist token
+      setUser(data.user);
+      setIsAuthenticated(true);
+      setToken(null); // cookie-only; don't persist token
     } catch (err) {
       console.error("Login error:", err);
+      throw err;
     }
   };
 

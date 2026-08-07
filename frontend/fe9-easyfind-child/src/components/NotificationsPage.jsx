@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Bell, ShieldCheck } from 'lucide-react';
 
@@ -28,8 +29,22 @@ const iconMap = {
 
 const NotificationsPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const getNotificationDestination = (title) => {
+    const t = (title || "").toLowerCase();
+    if (
+      t.includes("match") || 
+      t.includes("ready for collection") || 
+      t.includes("verified") || 
+      t.includes("handed over")
+    ) {
+      return "/dashboard/my-reports";
+    }
+    return null;
+  };
 
   const getRelativeTime = (dateString) => {
     const now = new Date();
@@ -154,14 +169,26 @@ const NotificationsPage = () => {
               };
               const colorClass = typeColors[notif.type] || typeColors.info;
 
+              const destination = getNotificationDestination(notif.title);
+              const isClickable = !!destination;
+
               return (
                 <div 
                   key={notif._id}
-                  onClick={() => handleMarkAsRead(notif._id, notif.isRead)}
-                  className={`flex gap-4 items-start p-4 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                  onClick={async () => {
+                    await handleMarkAsRead(notif._id, notif.isRead);
+                    if (isClickable) {
+                      navigate(destination);
+                    }
+                  }}
+                  className={`flex gap-4 items-start p-4 rounded-2xl border transition-all duration-200 ${
+                    isClickable 
+                      ? "cursor-pointer hover:bg-slate-50/50 hover:scale-[1.005] shadow-2xs" 
+                      : "cursor-default"
+                  } ${
                     notif.isRead 
-                      ? "bg-white border-slate-100 hover:bg-slate-50/50" 
-                      : "bg-indigo-50/30 border-indigo-100/50 hover:bg-indigo-50/50 shadow-2xs"
+                      ? "bg-white border-slate-100" 
+                      : "bg-indigo-50/30 border-indigo-100/50"
                   }`}
                 >
                   <div className={`p-2.5 rounded-xl shrink-0 ${colorClass}`}>
