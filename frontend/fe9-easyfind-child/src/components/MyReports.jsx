@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getReportEffectiveDate, formatReportDate, getStatusBadge } from '../utils/dateHelper';
 import { useAuth } from '../contexts/AuthContext';
 import { ShieldCheck, AlertCircle, Trash2, Calendar, MapPin, Tag, Sparkles } from 'lucide-react';
 
@@ -43,7 +44,11 @@ const MyReportsPage = () => {
 
       // Combine and sort chronologically (descending)
       const combined = [...lostData, ...foundData];
-      combined.sort((a, b) => new Date(b.createdAt || b.dateLost || b.reportedDate) - new Date(a.createdAt || a.dateLost || a.reportedDate));
+      combined.sort((a, b) => {
+        const dateA = getReportEffectiveDate(a) || new Date(0);
+        const dateB = getReportEffectiveDate(b) || new Date(0);
+        return dateB - dateA;
+      });
       
       setItems(combined);
     } catch (err) {
@@ -86,58 +91,9 @@ const MyReportsPage = () => {
     }
   };
 
-  const getStatusBadge = (status, reportType) => {
-    const normalized = (status || 'pending').toLowerCase();
-    
-    if (reportType === 'Lost') {
-      if (normalized === 'claimed') {
-        return {
-          text: 'Claimed',
-          bg: 'bg-green-50 border-green-200 text-green-700',
-          icon: '✅'
-        };
-      }
-      if (normalized === 'match-found') {
-        return {
-          text: 'Match Found',
-          bg: 'bg-emerald-50 border-emerald-250 text-emerald-700',
-          icon: '✨'
-        };
-      }
-      if (normalized === 'not-found') {
-        return {
-          text: 'Not Found',
-          bg: 'bg-rose-50 border-rose-200 text-rose-700',
-          icon: '❌'
-        };
-      }
-      if (normalized === 'rejected') {
-        return {
-          text: 'Rejected',
-          bg: 'bg-rose-50 border-rose-200 text-rose-700',
-          icon: '❌'
-        };
-      }
-      return {
-        text: 'Pending Verification',
-        bg: 'bg-amber-50 border-amber-200 text-amber-700',
-        icon: '🟡'
-      };
-    } else {
-      if (normalized === 'verified' || normalized === 'claimed') {
-        return {
-          text: 'Handed Over to Security Office',
-          bg: 'bg-emerald-50 border-emerald-250 text-emerald-700',
-          icon: '🟢'
-        };
-      }
-      return {
-        text: 'Pending Handover',
-        bg: 'bg-amber-50 border-amber-200 text-amber-700',
-        icon: '🟡'
-      };
-    }
-  };
+
+
+
 
   if (!user) {
     return (
@@ -178,7 +134,7 @@ const MyReportsPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {items.map((item) => {
-            const statusBadge = getStatusBadge(item.status, item.reportType);
+            const statusBadge = getStatusBadge(item);
             return (
               <div 
                 key={item._id} 
@@ -220,13 +176,13 @@ const MyReportsPage = () => {
                     <div>
                       <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Date Reported</span>
                       <span className="text-slate-700 block mt-0.5 font-sans">
-                        {new Date(item.createdAt || item.dateLost || item.reportedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {formatReportDate(item)}
                       </span>
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Last Updated</span>
                       <span className="text-slate-700 block mt-0.5 font-sans">
-                        {new Date(item.updatedAt || item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {formatReportDate(item.updatedAt || item.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -271,14 +227,21 @@ const MyReportsPage = () => {
                   ) : (
                     <button
                       onClick={() => {
-                        if (item.reportType === 'Found' && (item.status === 'verified' || item.status === 'claimed')) {
+                        if (
+                          (item.reportType === 'Found' && (item.status === 'verified' || item.status === 'claimed')) ||
+                          (item.reportType === 'Lost' && item.status === 'claimed')
+                        ) {
                           return;
                         }
                         setConfirmDelete(item._id);
                       }}
-                      disabled={item.reportType === 'Found' && (item.status === 'verified' || item.status === 'claimed')}
+                      disabled={
+                        (item.reportType === 'Found' && (item.status === 'verified' || item.status === 'claimed')) ||
+                        (item.reportType === 'Lost' && item.status === 'claimed')
+                      }
                       className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all text-xs font-bold border ${
-                        item.reportType === 'Found' && (item.status === 'verified' || item.status === 'claimed')
+                        (item.reportType === 'Found' && (item.status === 'verified' || item.status === 'claimed')) ||
+                        (item.reportType === 'Lost' && item.status === 'claimed')
                           ? 'bg-slate-55 border-slate-100 text-slate-300 cursor-not-allowed'
                           : 'bg-slate-50 hover:bg-rose-50 border-slate-100 text-slate-500 hover:text-rose-600 cursor-pointer'
                       }`}

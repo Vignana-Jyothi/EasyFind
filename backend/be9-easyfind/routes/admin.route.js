@@ -160,7 +160,8 @@ router.get('/found', auth, async (req, res) => {
         handoverLocation: 'Security Office',
         status: 'verified', // Admin uploads directly as verified
         code: await generateUniqueCode(),
-        reportedDate,
+        reportedDate: reportedDate || new Date(),
+        verifiedAt: new Date(),
         image: { url: req.file.path, public_id: req.file.filename }
       });
 
@@ -192,6 +193,7 @@ router.put("/:id/handover",auth, upload.single("image"), async (req, res) => {
 
     // Update status and store Cloudinary image details
     item.status = "claimed";
+    item.verifiedAt = item.verifiedAt || new Date();
     item.claimerDetails = {
       contact,
       rollNo,
@@ -204,6 +206,23 @@ router.put("/:id/handover",auth, upload.single("image"), async (req, res) => {
 
     await item.save();
     console.log("Item handed over successfully with item details", item);
+
+    // Update matching LostItem for this student
+    try {
+      const studentEmail = rollNo.toLowerCase() + "@vnrvjiet.in";
+      const matchingLost = await LostItem.findOne({
+        email: studentEmail,
+        category: item.category,
+        status: { $ne: 'claimed' }
+      });
+      if (matchingLost) {
+        matchingLost.status = 'claimed';
+        await matchingLost.save();
+        console.log(`[Manual Handover] Matching LostItem ID ${matchingLost._id} status updated to claimed`);
+      }
+    } catch (lostUpdateErr) {
+      console.error('[Manual Handover] Error updating matching LostItem status:', lostUpdateErr);
+    }
 
     // Trigger In-App Notifications
     const studentEmail = rollNo.toLowerCase() + "@vnrvjiet.in";
@@ -471,6 +490,7 @@ router.post('/:id/confirm-handover', auth, async (req, res) => {
 
     // Update FoundItem status and store handover details
     item.status = 'claimed';
+    item.verifiedAt = item.verifiedAt || new Date();
     item.handoverDetails = {
       handoverTime: new Date(),
       handoverAdmin: adminEmail,
@@ -490,6 +510,23 @@ router.post('/:id/confirm-handover', auth, async (req, res) => {
 
     await item.save();
     console.log(`[Handover Confirmed] Item ID ${item._id} successfully handed over to ${rollNo.toUpperCase()} by admin ${adminEmail}`);
+
+    // Update matching LostItem for this student
+    try {
+      const studentEmail = rollNo.toLowerCase() + "@vnrvjiet.in";
+      const matchingLost = await LostItem.findOne({
+        email: studentEmail,
+        category: item.category,
+        status: { $ne: 'claimed' }
+      });
+      if (matchingLost) {
+        matchingLost.status = 'claimed';
+        await matchingLost.save();
+        console.log(`[Handover Confirmed] Matching LostItem ID ${matchingLost._id} status updated to claimed`);
+      }
+    } catch (lostUpdateErr) {
+      console.error('[Handover Confirmed] Error updating matching LostItem status:', lostUpdateErr);
+    }
 
     // Trigger In-App Notifications
     const studentEmail = rollNo.toLowerCase() + "@vnrvjiet.in";

@@ -22,8 +22,12 @@ const LostItemSchema = new mongoose.Schema({
     description:{
         type:String,
         required:true
+    },
+    status: {
+        type: String,
+        enum: ["pending", "match-found", "verified", "claimed", "not-found", "rejected"],
+        default: "pending",
     }
-    
 }, { timestamps: true });
 
 module.exports = mongoose.model('LostItem', LostItemSchema);

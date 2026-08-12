@@ -51,9 +51,17 @@ const Layout = () => {
 
     fetchUnreadCount();
     
+    const handleNotificationsUpdate = () => {
+      fetchUnreadCount();
+    };
+    window.addEventListener('notificationsUpdated', handleNotificationsUpdate);
+    
     // Auto-refresh notifications count periodically (every 15 seconds)
     const interval = setInterval(fetchUnreadCount, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('notificationsUpdated', handleNotificationsUpdate);
+      clearInterval(interval);
+    };
   }, [user?.email]);
 
   return (
@@ -118,7 +126,7 @@ const Layout = () => {
       {/* 2. Right Workspace Container */}
       <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         {/* Top Header Navigation */}
-        <Header />
+        <Header unreadCount={unreadCount} />
         
         {/* Main Routed Page content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-7xl w-full mx-auto animate-fade-in">

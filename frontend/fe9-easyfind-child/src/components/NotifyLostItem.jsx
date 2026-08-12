@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
-import LostItems from "./LostItems";
+
 import { AlertCircle, CheckCircle, Info, X, Tag, FileText, MapPin, Calendar, HelpCircle } from "lucide-react";
 
 const categories = [
@@ -254,10 +254,7 @@ function NotifyLostItems() {
         </div>
       </div>
 
-      {/* Active Reports List */}
-      <div className="pt-4">
-        <LostItems />
-      </div>
+
     </div>
   );
 }

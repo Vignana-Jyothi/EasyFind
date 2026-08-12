@@ -176,6 +176,12 @@ async function processMatchNotification(notification) {
       if (score >= threshold) {
         console.log(`🎯 Match detected: Found Item "${item.itemName}" matches Lost Item "${lostItem.itemName}" reported by ${lostItem.email} with Confidence Score: ${score}% (Threshold: ${threshold}%)`);
 
+        // Update LostItem status in database
+        if (lostItem.status !== 'claimed') {
+          lostItem.status = 'match-found';
+          await lostItem.save();
+        }
+
         // Record the match in memory to store in the notification document later
         matches.push({
           lostItem: lostItem._id,
