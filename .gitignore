@@ -105,3 +105,10 @@ Thumbs.db
 # .db and .sqlite files are intentionally allowed
 backend/be0-campus/*.db
 # because you said you want to commit them
+############################################
+# LOCAL MONGODB DATA
+############################################
+
+# Ignore local MongoDB database/storage files
+**/mongodb/
+**/mongod.lock
