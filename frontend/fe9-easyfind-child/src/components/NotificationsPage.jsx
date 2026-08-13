@@ -47,18 +47,7 @@ const NotificationsPage = () => {
     return null;
   };
 
-  const getNotificationDestination = (title) => {
-    const t = (title || "").toLowerCase();
-    if (
-      t.includes("match") || 
-      t.includes("ready for collection") || 
-      t.includes("verified") || 
-      t.includes("handed over")
-    ) {
-      return "/dashboard/my-reports";
-    }
-    return null;
-  };
+ 
 
   const getRelativeTime = (dateString) => {
     const now = new Date();
