@@ -2,7 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, AlertCircle, Bell, User, Search, LogOut, HeartHandshake } from 'lucide-react';
 
-const Header = () => {
+const Header = ({ unreadCount }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,7 +62,9 @@ const Header = () => {
             aria-label="View notifications"
           >
             <Bell className="w-[18px] h-[18px]" />
-            <span className="absolute top-1 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+            )}
           </button>
 
           <div 

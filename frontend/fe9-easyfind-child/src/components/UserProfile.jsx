@@ -23,7 +23,6 @@ const StudentProfile = () => {
 
   const rollNumber = extractRollNumber(user?.email);
 
-  const department = user.department || "Not Available";
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in font-sans">
@@ -70,13 +69,6 @@ const StudentProfile = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <BookOpen className="w-5 h-5 text-slate-400 shrink-0" />
-            <div className="w-full">
-              <span className="text-[10px] text-slate-400 block leading-none font-bold uppercase tracking-wider">Department</span>
-              <span className="text-slate-800 mt-1.5 block">{department}</span>
-            </div>
-          </div>
 
           <button
             onClick={logout}

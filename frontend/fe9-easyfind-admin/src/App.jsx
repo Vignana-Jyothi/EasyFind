@@ -69,9 +69,17 @@ function AppContent() {
 
     fetchUnreadCount();
     
+    const handleNotificationsUpdate = () => {
+      fetchUnreadCount();
+    };
+    window.addEventListener('notificationsUpdated', handleNotificationsUpdate);
+
     // Periodically fetch notifications count (every 15 seconds)
     const interval = setInterval(fetchUnreadCount, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('notificationsUpdated', handleNotificationsUpdate);
+      clearInterval(interval);
+    };
   }, [location.pathname]);
 
   const handleLogout = () => {

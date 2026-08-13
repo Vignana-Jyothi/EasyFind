@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getReportEffectiveDate, formatReportDate, getStatusBadge } from '../utils/dateHelper';
 import { 
   ClipboardList, 
   Eye, 
@@ -92,48 +93,16 @@ const Dashboard = () => {
 
   // Combine reported items to display inside the recent logs table
   const recentReports = [...foundItems, ...lostItems.map(i => ({...i, reporterRollNo: 'self_lost'}))]
-    .sort((a, b) => new Date(b.createdAt || b.reportedDate) - new Date(a.createdAt || a.reportedDate))
+    .sort((a, b) => {
+      const dateA = getReportEffectiveDate(a) || new Date(0);
+      const dateB = getReportEffectiveDate(b) || new Date(0);
+      return dateB - dateA;
+    })
     .slice(0, 5);
 
-  const getStatusBadge = (item) => {
-    const isLost = item.reporterRollNo === 'self_lost';
-    const status = (item.status || 'pending').toLowerCase();
-    
-    if (isLost) {
-      if (status === 'claimed') {
-        return {
-          text: 'Claimed',
-          bg: 'bg-purple-50 border-purple-100 text-purple-600',
-          dot: 'bg-purple-500'
-        };
-      }
-      if (status === 'verified') {
-        return {
-          text: 'Ready for Collection',
-          bg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
-          dot: 'bg-emerald-500'
-        };
-      }
-      return {
-        text: 'Pending Verification',
-        bg: 'bg-blue-50 border-blue-100 text-blue-600',
-        dot: 'bg-blue-500'
-      };
-    } else {
-      if (status === 'verified' || status === 'claimed') {
-        return {
-          text: 'Handed Over to Security Office',
-          bg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
-          dot: 'bg-emerald-500'
-        };
-      }
-      return {
-        text: 'Pending Handover',
-        bg: 'bg-amber-50 border-amber-100 text-amber-600',
-        dot: 'bg-amber-500'
-      };
-    }
-  };
+
+
+
 
   return (
     <div className="space-y-6">
@@ -263,7 +232,7 @@ const Dashboard = () => {
                         })()}
                       </td>
                       <td className="py-3.5 px-2 hidden md:table-cell text-slate-400">
-                        {new Date(item.createdAt || item.reportedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {formatReportDate(item)}
                       </td>
                       <td className="py-3.5 pl-2 text-right">
                         <button
@@ -399,7 +368,7 @@ const Dashboard = () => {
                 <div>
                   <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px] block">Date Reported</span>
                   <span className="font-semibold text-slate-700 mt-0.5 block">
-                    {new Date(selectedItem.createdAt || selectedItem.reportedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    {formatReportDate(selectedItem, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </span>
                 </div>
               </div>

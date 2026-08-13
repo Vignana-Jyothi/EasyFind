@@ -105,13 +105,6 @@ const AdminProfile = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <BookOpen className="w-5 h-5 text-slate-400 shrink-0" />
-            <div className="w-full">
-              <span className="text-[10px] text-slate-400 block leading-none font-bold uppercase tracking-wider">Department / Section</span>
-              <span className="text-slate-800 mt-1.5 block">{admin.department || "Not Available"}</span>
-            </div>
-          </div>
 
           <button
             onClick={handleLogout}

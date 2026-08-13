@@ -32,6 +32,20 @@ const NotificationsPage = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState({ text: "", type: "" });
+
+  const getNotificationDestination = (title) => {
+    const t = (title || "").toLowerCase();
+    if (
+      t.includes("match") || 
+      t.includes("ready for collection") || 
+      t.includes("verified") || 
+      t.includes("handed over")
+    ) {
+      return "/dashboard/my-reports";
+    }
+    return null;
+  };
 
   const getNotificationDestination = (title) => {
     const t = (title || "").toLowerCase();
@@ -96,6 +110,7 @@ const NotificationsPage = () => {
         setNotifications(prev =>
           prev.map(n => (n._id === id ? { ...n, isRead: true } : n))
         );
+        window.dispatchEvent(new Event('notificationsUpdated'));
       }
     } catch (err) {
       console.error("Error marking notification read:", err);
@@ -111,9 +126,14 @@ const NotificationsPage = () => {
       );
       if (res.data && res.data.success) {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setStatusMessage({ text: "All notifications marked as read.", type: "success" });
+        window.dispatchEvent(new Event('notificationsUpdated'));
+      } else {
+        setStatusMessage({ text: "Unable to mark notifications as read. Please try again.", type: "error" });
       }
     } catch (err) {
       console.error("Error marking all read:", err);
+      setStatusMessage({ text: "Unable to mark notifications as read. Please try again.", type: "error" });
     }
   };
 
@@ -143,6 +163,17 @@ const NotificationsPage = () => {
           </button>
         )}
       </div>
+
+      {statusMessage.text && (
+        <div className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border animate-fade-in ${
+          statusMessage.type === 'success' 
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+            : 'bg-rose-50 border-rose-100 text-rose-800'
+        }`}>
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{statusMessage.text}</span>
+        </div>
+      )}
 
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8">
         {loading ? (

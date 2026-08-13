@@ -206,7 +206,7 @@ router.get('/found', auth, async (req, res) => {
     if (ID.toUpperCase() !== userRollNo) {
       return res.status(403).json({ message: "Forbidden: Cannot view reported items of another user" });
     }
-    const reportedItems=await Item.find({ reporterRollNo:ID}).select('code itemName status image description foundLocation category');
+    const reportedItems=await Item.find({ reporterRollNo:ID}).select('code itemName status image description foundLocation category reporterRollNo reportedDate verifiedAt createdAt updatedAt');
     res.send(reportedItems)
 
   })
