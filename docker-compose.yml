@@ -5,7 +5,7 @@ services:
     build:
       context: ./backend/be9-easyfind
     ports:
-      - "5000:5000"
+      - "5100:5000"
     env_file:
       - ./backend/be9-easyfind/.env
     restart: always
