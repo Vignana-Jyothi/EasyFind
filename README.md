@@ -17,7 +17,7 @@ Backend  (Workstation2)
     - MySQL
     - SQLite
 
-# Servers
+# Servers.
 
 ## Google SSO Backend
 
